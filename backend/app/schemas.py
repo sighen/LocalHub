@@ -1,0 +1,147 @@
+from datetime import date, datetime
+from typing import List, Optional
+
+from pydantic import BaseModel
+
+
+# ---------- Posts ----------
+class PostCreate(BaseModel):
+    title: str
+    content: str
+    category: Optional[str] = None
+    password: str
+
+
+class PostUpdate(BaseModel):
+    title: str
+    content: str
+    category: Optional[str] = None
+    password: str
+
+
+class PostDelete(BaseModel):
+    password: str
+
+
+class PostListItem(BaseModel):
+    id: int
+    title: str
+    category: Optional[str]
+    view_count: int
+    comment_count: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PostDetail(BaseModel):
+    id: int
+    title: str
+    content: str
+    category: Optional[str]
+    view_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PostListResponse(BaseModel):
+    total: int
+    page: int
+    size: int
+    items: List[PostListItem]
+
+
+# ---------- Comments ----------
+class CommentCreate(BaseModel):
+    content: str
+    password: str
+
+
+class CommentDelete(BaseModel):
+    password: str
+
+
+class CommentItem(BaseModel):
+    id: int
+    content: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ---------- Chat ----------
+class ChatMessage(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: Optional[List[ChatMessage]] = None
+
+
+class ChatReference(BaseModel):
+    type: str  # "location" | "post"
+    id: str
+    title: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    references: Optional[List[ChatReference]] = None
+
+
+# ---------- Locations ----------
+class LocationListItem(BaseModel):
+    content_id: str
+    title: str
+    category: str
+    region: Optional[str]
+    address: Optional[str]
+    lat: Optional[float]
+    lng: Optional[float]
+    image: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class LocationDetail(BaseModel):
+    content_id: str
+    title: str
+    category: str
+    overview: Optional[str]
+    address: Optional[str]
+    tel: Optional[str]
+    lat: Optional[float]
+    lng: Optional[float]
+    images: Optional[List[str]] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ---------- Festivals ----------
+class FestivalListItem(BaseModel):
+    content_id: str
+    title: str
+    region: Optional[str]
+    start_date: Optional[date]
+    end_date: Optional[date]
+    summary: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class FestivalDetail(FestivalListItem):
+    overview: Optional[str]
+    fee: Optional[str]
+    lat: Optional[float]
+    lng: Optional[float]
+    images: Optional[List[str]] = None
