@@ -147,6 +147,8 @@ class PlaceItem(BaseModel):
     category_l2: Optional[str]
     category_l3: Optional[str]
     copyright_type: Optional[str]
+    event_start_date: Optional[str]
+    event_end_date: Optional[str]
 
     class Config:
         from_attributes = True
