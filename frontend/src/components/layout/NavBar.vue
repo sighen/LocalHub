@@ -46,7 +46,7 @@ const openMap = () => {
             @click="setTab('home')"
             :class="['px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200', currentTab === 'home' ? 'text-blue-600 bg-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50']"
           >
-            지금의 서울 (홈)
+            지금의 서울
           </button>
           <button @click="openCalendar" class="px-5 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/50 transition duration-200">
             축제 캘린더
@@ -58,7 +58,7 @@ const openMap = () => {
             @click="setTab('community')"
             :class="['px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200', currentTab === 'community' ? 'text-blue-600 bg-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50']"
           >
-            익명 소통방 (CRUD)
+            커뮤니티
           </button>
         </div>
 
@@ -79,7 +79,7 @@ const openMap = () => {
 
     <div v-if="isMobileMenuOpen" class="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-2">
       <button @click="setTab('home')" class="w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50 flex items-center">
-        <i class="fa-solid fa-house w-6 text-blue-600"></i> 지금의 서울 (홈)
+        <i class="fa-solid fa-house w-6 text-blue-600"></i> 지금의 서울
       </button>
       <button @click="openCalendar" class="w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50 flex items-center">
         <i class="fa-solid fa-calendar w-6 text-emerald-600"></i> 축제 캘린더
@@ -88,7 +88,7 @@ const openMap = () => {
         <i class="fa-solid fa-map-location-dot w-6 text-indigo-600"></i> 맛집·관광 명소 지도
       </button>
       <button @click="setTab('community')" class="w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50 flex items-center">
-        <i class="fa-solid fa-comments w-6 text-purple-600"></i> 익명 소통방 (CRUD)
+        <i class="fa-solid fa-comments w-6 text-purple-600"></i> 커뮤니티
       </button>
     </div>
   </nav>

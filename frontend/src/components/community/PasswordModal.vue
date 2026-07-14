@@ -13,7 +13,7 @@ const emit = defineEmits(['close', 'confirm'])
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xs overflow-hidden animate-fade-in">
       <div class="px-4 py-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
         <h4 class="text-xs font-black text-slate-900">비밀번호 확인</h4>
-        <button @click="emit('close')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        <button @click="emit('close')" class="p-1.5 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-4 space-y-3">
         <p class="text-[11px] text-slate-500 leading-relaxed">글 작성 시 등록했던 비밀번호를 입력하십시오.</p>
