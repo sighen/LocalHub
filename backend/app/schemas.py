@@ -159,6 +159,33 @@ class PlaceListResponse(BaseModel):
     total: int
 
 
+class PlaceFacetValue(BaseModel):
+    value: str
+    count: int
+
+
+class PlaceFacetsResponse(BaseModel):
+    districts: List[PlaceFacetValue]
+    tags: List[PlaceFacetValue]
+
+
+class PlacePoint(BaseModel):
+    content_id: str
+    title: str
+    district_name: Optional[str]
+    category_l1: Optional[str]
+    latitude: Optional[float]
+    longitude: Optional[float]
+
+    class Config:
+        from_attributes = True
+
+
+class NearbyPlacesResponse(BaseModel):
+    restaurants: List[PlaceItem]
+    lodgings: List[PlaceItem]
+
+
 # ---------- Festivals ----------
 class FestivalListItem(BaseModel):
     content_id: str

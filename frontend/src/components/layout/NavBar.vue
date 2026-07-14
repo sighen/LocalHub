@@ -5,7 +5,7 @@ import { useWeather } from '../../composables/useWeather'
 const props = defineProps({
   currentTab: { type: String, required: true }
 })
-const emit = defineEmits(['update:currentTab', 'open-calendar', 'open-map'])
+const emit = defineEmits(['update:currentTab', 'open-calendar'])
 
 const { weatherData, toggleWeatherDetail } = useWeather()
 
@@ -18,11 +18,6 @@ const setTab = (tab) => {
 
 const openCalendar = () => {
   emit('open-calendar')
-  isMobileMenuOpen.value = false
-}
-
-const openMap = () => {
-  emit('open-map')
   isMobileMenuOpen.value = false
 }
 </script>
@@ -51,8 +46,11 @@ const openMap = () => {
           <button @click="openCalendar" class="px-5 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/50 transition duration-200">
             축제 캘린더
           </button>
-          <button @click="openMap" class="px-5 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/50 transition duration-200">
-            맛집·관광 명소 지도
+          <button
+            @click="setTab('explore')"
+            :class="['px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200', currentTab === 'explore' ? 'text-blue-600 bg-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50']"
+          >
+            관광지 추천
           </button>
           <button
             @click="setTab('community')"
@@ -84,8 +82,8 @@ const openMap = () => {
       <button @click="openCalendar" class="w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50 flex items-center">
         <i class="fa-solid fa-calendar w-6 text-emerald-600"></i> 축제 캘린더
       </button>
-      <button @click="openMap" class="w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50 flex items-center">
-        <i class="fa-solid fa-map-location-dot w-6 text-indigo-600"></i> 맛집·관광 명소 지도
+      <button @click="setTab('explore')" class="w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50 flex items-center">
+        <i class="fa-solid fa-map-location-dot w-6 text-indigo-600"></i> 관광지 추천
       </button>
       <button @click="setTab('community')" class="w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-50 flex items-center">
         <i class="fa-solid fa-comments w-6 text-purple-600"></i> 커뮤니티
