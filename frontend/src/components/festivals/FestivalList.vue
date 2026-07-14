@@ -1,5 +1,6 @@
 <script setup>
 import { formatEventPeriod } from '../../composables/useFestivals'
+import { secureImageUrl } from '../../utils/imageUrl'
 
 defineProps({
   festivals: { type: Array, required: true },
@@ -39,7 +40,7 @@ const emit = defineEmits(['open-detail', 'retry'])
           <div class="flip-card-front rounded-2xl border border-slate-100 shadow-sm overflow-hidden bg-slate-100">
             <img
               v-if="f.image_url || f.thumbnail_url"
-              :src="f.image_url || f.thumbnail_url"
+              :src="secureImageUrl(f.image_url || f.thumbnail_url)"
               :alt="f.title"
               loading="lazy"
               class="w-full h-full object-cover"

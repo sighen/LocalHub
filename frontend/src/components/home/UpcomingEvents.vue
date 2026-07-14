@@ -3,7 +3,8 @@ import { useEvents } from '../../composables/useEvents'
 
 const emit = defineEmits(['open-calendar'])
 
-const { selectedDate, filteredEvents, getWeekdayLabel, openEventDetails } = useEvents()
+const { year, month, daysInMonth, selectedDate, filteredEvents, getWeekdayLabel, dateStrFor, goToMonth, openEventDetails } =
+  useEvents()
 </script>
 
 <template>
@@ -15,24 +16,32 @@ const { selectedDate, filteredEvents, getWeekdayLabel, openEventDetails } = useE
 
     <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center gap-3">
       <div class="bg-slate-100 px-4 py-2 rounded-xl text-center shrink-0">
-        <span class="text-[10px] text-slate-400 font-bold block uppercase">2026</span>
-        <span class="text-lg font-black text-slate-800">07월</span>
+        <span class="text-[10px] text-slate-400 font-bold block uppercase">{{ year }}</span>
+        <div class="flex items-center justify-center gap-3">
+          <button @click="goToMonth(-1)" class="text-slate-400 hover:text-slate-700 font-black text-sm transition px-0.5">&lt;</button>
+          <span class="text-lg font-black text-slate-800">{{ String(month).padStart(2, '0') }}월</span>
+          <button @click="goToMonth(1)" class="text-slate-400 hover:text-slate-700 font-black text-sm transition px-0.5">&gt;</button>
+        </div>
       </div>
 
       <div class="flex-grow overflow-x-auto flex gap-2 py-1 custom-scrollbar scroll-smooth">
         <button
-          v-for="day in 14"
+          v-for="day in daysInMonth"
           :key="day"
-          @click="selectedDate = `2026-07-${day + 13}`"
-          :class="['px-4 py-2.5 rounded-xl text-center min-w-[56px] transition duration-150 shrink-0 border', selectedDate === `2026-07-${day + 13}` ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-500/10' : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100']"
+          @click="selectedDate = dateStrFor(day)"
+          :class="['px-4 py-2.5 rounded-xl text-center min-w-[56px] transition duration-150 shrink-0 border', selectedDate === dateStrFor(day) ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-500/10' : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100']"
         >
-          <span class="text-xs block opacity-80">{{ getWeekdayLabel(day + 13) }}</span>
-          <span class="text-base font-extrabold">{{ day + 13 }}</span>
+          <span class="text-xs block opacity-80">{{ getWeekdayLabel(day) }}</span>
+          <span class="text-base font-extrabold">{{ day }}</span>
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+    <div v-if="filteredEvents.length === 0" class="p-16 text-center text-slate-400 space-y-2 bg-white border border-slate-100 rounded-2xl">
+      <i class="fa-regular fa-calendar-xmark text-3xl block mb-2"></i>
+      <p class="text-sm font-semibold">선택한 날짜에 예정된 이벤트가 없습니다.</p>
+    </div>
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
       <div
         v-for="ev in filteredEvents"
         :key="ev.id"

@@ -85,6 +85,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <Teleport to="body">
   <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
@@ -182,4 +183,5 @@ onMounted(() => {
       </div>
     </div>
   </div>
+  </Teleport>
 </template>

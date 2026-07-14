@@ -98,15 +98,24 @@ onMounted(() => {
         <h2 class="text-3xl font-black text-slate-900 tracking-tight">축제 · 공연 · 행사</h2>
         <p class="text-sm text-slate-500 mt-1">서울시 공공데이터 기반으로 진행 중이거나 예정된 축제·행사를 찾아보세요.</p>
       </div>
+    </div>
 
-      <select
-        :value="district"
-        @change="selectDistrict($event.target.value)"
-        class="px-3 py-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shrink-0"
+    <div class="flex flex-wrap items-center gap-1.5">
+      <span class="text-xs font-black text-slate-700 mr-1">권역</span>
+      <button
+        @click="selectDistrict('')"
+        :class="['px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition', !district ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
       >
-        <option value="">전체 권역</option>
-        <option v-for="d in facets.districts" :key="d.value" :value="d.value">{{ d.value }} ({{ d.count }})</option>
-      </select>
+        전체
+      </button>
+      <button
+        v-for="d in facets.districts"
+        :key="d.value"
+        @click="selectDistrict(d.value)"
+        :class="['px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition', district === d.value ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+      >
+        {{ d.value }} <span class="opacity-60">{{ d.count }}</span>
+      </button>
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-4">

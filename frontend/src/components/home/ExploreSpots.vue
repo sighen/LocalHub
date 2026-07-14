@@ -1,7 +1,7 @@
 <script setup>
-import { exploreSpots } from '../../data/mockData'
+import { exploreCategories } from '../../data/mockData'
 
-const emit = defineEmits(['open-location'])
+const emit = defineEmits(['open-explore-tag'])
 </script>
 
 <template>
@@ -14,20 +14,20 @@ const emit = defineEmits(['open-location'])
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div
-          v-for="spot in exploreSpots"
-          :key="spot.id"
-          @click="emit('open-location', spot)"
+          v-for="category in exploreCategories"
+          :key="category.id"
+          @click="emit('open-explore-tag', category.code)"
           class="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg hover:border-blue-100 transition duration-300 cursor-pointer"
         >
           <div class="h-44 bg-slate-100 overflow-hidden relative">
-            <img :src="spot.img" :alt="spot.title" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" />
+            <img :src="category.img" :alt="category.title" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-4">
-              <span class="text-white text-xs font-bold"><i class="fa-solid fa-map-pin mr-1 text-red-500"></i> 실시간 지도 핀 확인</span>
+              <span class="text-white text-xs font-bold"><i class="fa-solid fa-tags mr-1 text-red-500"></i> 관광지 추천에서 모아보기</span>
             </div>
           </div>
           <div class="p-5 space-y-2">
-            <h3 class="text-base font-extrabold text-slate-800 group-hover:text-blue-600 transition">{{ spot.title }}</h3>
-            <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">{{ spot.desc }}</p>
+            <h3 class="text-base font-extrabold text-slate-800 group-hover:text-blue-600 transition">{{ category.title }}</h3>
+            <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">{{ category.desc }}</p>
           </div>
         </div>
       </div>
