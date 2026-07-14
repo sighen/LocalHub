@@ -95,3 +95,5 @@ class Place(Base):
     copyright_type = Column(String, nullable=True)
     source_created_at = Column(DateTime, nullable=True)
     source_modified_at = Column(DateTime, nullable=True)
+    event_start_date = Column(String, nullable=True)
+    event_end_date = Column(String, nullable=True)

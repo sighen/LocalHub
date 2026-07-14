@@ -2,7 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import posts, comments, chat, locations, festivals
+from app.routers import (
+    chat,
+    comments,
+    cultural_facilities,
+    festivals,
+    leports,
+    locations,
+    places,
+    posts,
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,6 +31,13 @@ app.include_router(comments.router, prefix="/api", tags=["community-comments"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(locations.router, prefix="/api/locations", tags=["locations"])
 app.include_router(festivals.router, prefix="/api/festivals", tags=["festivals"])
+app.include_router(
+    cultural_facilities.router,
+    prefix="/api/cultural-facilities",
+    tags=["cultural-facilities"],
+)
+app.include_router(leports.router, prefix="/api/leports", tags=["leports"])
+app.include_router(places.router, prefix="/api/places", tags=["places"])
 
 
 @app.get("/")
