@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -75,3 +76,18 @@ def list_festivals(
         .all()
     )
     return schemas.PlaceListResponse(items=items, page=page, size=size, total=total)
+
+
+@router.get("/facets", response_model=schemas.PlaceFacetsResponse)
+def get_festival_facets(db: Session = Depends(get_db)):
+    district_rows = (
+        db.query(models.Place.district_name, func.count(models.Place.id))
+        .filter(models.Place.content_type_id == 15, models.Place.district_name.isnot(None))
+        .group_by(models.Place.district_name)
+        .order_by(models.Place.district_name.asc())
+        .all()
+    )
+    return schemas.PlaceFacetsResponse(
+        districts=[schemas.PlaceFacetValue(value=v, count=c) for v, c in district_rows],
+        tags=[],
+    )

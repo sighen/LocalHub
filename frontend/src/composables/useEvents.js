@@ -2,8 +2,8 @@ import { ref, computed } from 'vue'
 import { upcomingEvents as upcomingEventsData } from '../data/mockData'
 import { useToast } from './useToast'
 
-// UpcomingEvents 섹션과 CalendarModal이 같은 selectedDate 상태를 공유해야 하므로
-// 모듈 스코프에서 한 번만 생성합니다 (싱글턴 패턴).
+// 홈 화면 미리보기 위젯(UpcomingEvents) 전용 목업 데이터.
+// 실제 축제/행사 데이터는 축제·행사 탭(useFestivals)에서 백엔드 API로 조회한다.
 const selectedDate = ref('2026-07-14')
 const upcomingEvents = ref(upcomingEventsData)
 
