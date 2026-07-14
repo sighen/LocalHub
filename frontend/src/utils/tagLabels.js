@@ -5,7 +5,9 @@ export const TAG_LABELS = {
   HS: '역사·인문',
   EX: '체험',
   VE: '여가·공원/거리',
-  EV: '축제·행사'
+  EV: '축제·행사',
+  AC: '캠핑',
+  LS: '스포츠·레저시설'
 }
 
 export const tagLabel = (code) => TAG_LABELS[code] || code
