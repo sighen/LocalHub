@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -9,25 +9,31 @@ from app.database import get_db
 router = APIRouter()
 
 
-@router.get("", response_model=List[schemas.FestivalListItem])
+@router.get("", response_model=schemas.PlaceListResponse)
 def list_festivals(
-    region: Optional[str] = None,
-    month: Optional[str] = None,  # YYYY-MM
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    q: Optional[str] = None,
+    district: Optional[str] = None,
+    category: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
-    query = db.query(models.Festival)
-    if region:
-        query = query.filter(models.Festival.region == region)
-    if month:
-        query = query.filter(models.Festival.start_date.like(f"{month}%"))
-    return query.order_by(models.Festival.start_date.asc()).all()
+    query = db.query(models.Place).filter(models.Place.content_type_id == 15)
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            (models.Place.title.like(like)) | (models.Place.overview.like(like))
+        )
+    if district:
+        query = query.filter(models.Place.district_name == district)
+    if category:
+        query = query.filter(models.Place.category_l3 == category)
 
-
-@router.get("/{content_id}", response_model=schemas.FestivalDetail)
-def get_festival(content_id: str, db: Session = Depends(get_db)):
-    festival = (
-        db.query(models.Festival).filter(models.Festival.content_id == content_id).first()
+    total = query.count()
+    items = (
+        query.order_by(models.Place.source_modified_at.desc().nullslast())
+        .offset((page - 1) * size)
+        .limit(size)
+        .all()
     )
-    if not festival:
-        raise HTTPException(status_code=404, detail="축제 정보를 찾을 수 없습니다.")
-    return festival
+    return schemas.PlaceListResponse(items=items, page=page, size=size, total=total)

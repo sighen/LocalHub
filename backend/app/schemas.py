@@ -126,6 +126,39 @@ class LocationDetail(BaseModel):
         from_attributes = True
 
 
+class PlaceItem(BaseModel):
+    content_id: str
+    content_type_id: int
+    title: str
+    region: str
+    addr1: Optional[str]
+    addr2: Optional[str]
+    district_name: Optional[str]
+    zipcode: Optional[str]
+    longitude: Optional[float]
+    latitude: Optional[float]
+    image_url: Optional[str]
+    thumbnail_url: Optional[str]
+    tel: Optional[str]
+    tel_name: Optional[str]
+    homepage_url: Optional[str]
+    overview: Optional[str]
+    category_l1: Optional[str]
+    category_l2: Optional[str]
+    category_l3: Optional[str]
+    copyright_type: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class PlaceListResponse(BaseModel):
+    items: List[PlaceItem]
+    page: int
+    size: int
+    total: int
+
+
 # ---------- Festivals ----------
 class FestivalListItem(BaseModel):
     content_id: str

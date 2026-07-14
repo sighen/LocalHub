@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -9,45 +9,31 @@ from app.database import get_db
 router = APIRouter()
 
 
-@router.get("", response_model=List[schemas.LocationListItem])
+@router.get("", response_model=schemas.PlaceListResponse)
 def list_locations(
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    q: Optional[str] = None,
+    district: Optional[str] = None,
     category: Optional[str] = None,
-    region: Optional[str] = None,
-    keyword: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
-    query = db.query(models.Location)
-    if category:
-        query = query.filter(models.Location.category == category)
-    if region:
-        query = query.filter(models.Location.region == region)
-    if keyword:
-        like = f"%{keyword}%"
+    query = db.query(models.Place).filter(models.Place.content_type_id == 12)
+    if q:
+        like = f"%{q}%"
         query = query.filter(
-            (models.Location.title.like(like)) | (models.Location.overview.like(like))
+            (models.Place.title.like(like)) | (models.Place.overview.like(like))
         )
+    if district:
+        query = query.filter(models.Place.district_name == district)
+    if category:
+        query = query.filter(models.Place.category_l3 == category)
 
-    results = []
-    for loc in query.all():
-        image = loc.images[0] if loc.images else None
-        results.append(
-            schemas.LocationListItem(
-                content_id=loc.content_id,
-                title=loc.title,
-                category=loc.category,
-                region=loc.region,
-                address=loc.address,
-                lat=loc.lat,
-                lng=loc.lng,
-                image=image,
-            )
-        )
-    return results
-
-
-@router.get("/{content_id}", response_model=schemas.LocationDetail)
-def get_location(content_id: str, db: Session = Depends(get_db)):
-    loc = db.query(models.Location).filter(models.Location.content_id == content_id).first()
-    if not loc:
-        raise HTTPException(status_code=404, detail="장소를 찾을 수 없습니다.")
-    return loc
+    total = query.count()
+    items = (
+        query.order_by(models.Place.title.asc())
+        .offset((page - 1) * size)
+        .limit(size)
+        .all()
+    )
+    return schemas.PlaceListResponse(items=items, page=page, size=size, total=total)

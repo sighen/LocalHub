@@ -65,3 +65,33 @@ class Festival(Base):
     lat = Column(Float, nullable=True)
     lng = Column(Float, nullable=True)
     images = Column(JSON, nullable=True)
+
+
+class Place(Base):
+    __tablename__ = "places"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    content_id = Column(String, unique=True, index=True, nullable=False)
+    content_type_id = Column(Integer, index=True, nullable=False)
+    region = Column(String, nullable=False)
+    title = Column(String, index=True, nullable=False)
+    addr1 = Column(String, nullable=True)
+    addr2 = Column(String, nullable=True)
+    district_name = Column(String, index=True, nullable=True)
+    district_code = Column(String, index=True, nullable=True)
+    zipcode = Column(String, nullable=True)
+    longitude = Column(Float, nullable=True)
+    latitude = Column(Float, nullable=True)
+    image_url = Column(Text, nullable=True)
+    thumbnail_url = Column(Text, nullable=True)
+    tel = Column(String, nullable=True)
+    tel_name = Column(String, nullable=True)
+    homepage = Column(Text, nullable=True)
+    homepage_url = Column(Text, nullable=True)
+    overview = Column(Text, nullable=True)
+    category_l1 = Column(String, nullable=True)
+    category_l2 = Column(String, nullable=True)
+    category_l3 = Column(String, index=True, nullable=True)
+    copyright_type = Column(String, nullable=True)
+    source_created_at = Column(DateTime, nullable=True)
+    source_modified_at = Column(DateTime, nullable=True)
