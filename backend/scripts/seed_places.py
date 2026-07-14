@@ -5,16 +5,20 @@ from html import unescape
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import inspect, text
+
 from app.database import Base, SessionLocal, engine
 from app.models import Place
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 SEED_DIR = BASE_DIR / "data" / "seed"
 
-SEED_FILES = [
-    ("관광지", SEED_DIR / "서울_관광지_detailCommon.json", 12),
-    ("축제", SEED_DIR / "서울_축제공연행사_detailCommon.json", 15),
-]
+TARGET_TYPES = {
+    12: "\uad00\uad11\uc9c0",
+    15: "\ucd95\uc81c\uacf5\uc5f0\ud589\uc0ac",
+    14: "\ubb38\ud654\uc2dc\uc124",
+    28: "\ub808\ud3ec\uce20",
+}
 
 URL_PATTERN = re.compile(r"https?://[^\s\"'<>]+")
 HREF_PATTERN = re.compile(r"href=[\"']([^\"']+)[\"']", re.IGNORECASE)
@@ -64,7 +68,7 @@ def extract_district_name(addr1: str | None) -> str | None:
     if not addr1:
         return None
     for part in addr1.split():
-        if part.endswith("구"):
+        if part.endswith("\uad6c"):
             return part
     return None
 
@@ -74,33 +78,65 @@ def extract_homepage_url(homepage: str | None) -> str | None:
     if not homepage:
         return None
 
-    text = unescape(homepage)
-    href_match = HREF_PATTERN.search(text)
+    text_value = unescape(homepage)
+    href_match = HREF_PATTERN.search(text_value)
     if href_match:
         return href_match.group(1).strip()
 
-    url_match = URL_PATTERN.search(text)
+    url_match = URL_PATTERN.search(text_value)
     if url_match:
         return url_match.group(0).strip()
 
     return None
 
 
-def load_items(path: Path) -> list[dict[str, Any]]:
+def load_seed_payload(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8-sig"))
     items = payload.get("items", [])
     if not isinstance(items, list):
-        raise ValueError(f"{path}의 items가 배열이 아닙니다.")
-    return items
+        raise ValueError(f"{path} items must be a list.")
+    return payload
 
 
-def map_item(item: dict[str, Any], default_type_id: int) -> dict[str, Any]:
+def iter_seed_payloads() -> list[tuple[Path, dict[str, Any]]]:
+    payloads = []
+    for path in sorted(SEED_DIR.glob("*.json")):
+        payload = load_seed_payload(path)
+        content_type_id = to_int(payload.get("contentTypeId"))
+        if content_type_id in TARGET_TYPES:
+            payloads.append((path, payload))
+    return payloads
+
+
+def ensure_place_columns() -> None:
+    Base.metadata.create_all(bind=engine)
+    inspector = inspect(engine)
+    columns = {column["name"] for column in inspector.get_columns("places")}
+    required_text_columns = {
+        "event_start_date": "ALTER TABLE places ADD COLUMN event_start_date VARCHAR",
+        "event_end_date": "ALTER TABLE places ADD COLUMN event_end_date VARCHAR",
+    }
+    with engine.begin() as connection:
+        for column_name, ddl in required_text_columns.items():
+            if column_name not in columns:
+                connection.execute(text(ddl))
+
+
+def map_item(item: dict[str, Any], region: str, default_type_id: int) -> dict[str, Any]:
+    content_type_id = to_int(item.get("contenttypeid")) or default_type_id
     addr1 = blank_to_none(item.get("addr1"))
     homepage = blank_to_none(item.get("homepage"))
+    has_event_dates = "eventstartdate" in item or "eventenddate" in item
+    event_start_date = None
+    event_end_date = None
+    if content_type_id == 15 and has_event_dates:
+        event_start_date = blank_to_none(item.get("eventstartdate"))
+        event_end_date = blank_to_none(item.get("eventenddate"))
+
     return {
         "content_id": blank_to_none(item.get("contentid")),
-        "content_type_id": to_int(item.get("contenttypeid")) or default_type_id,
-        "region": "서울",
+        "content_type_id": content_type_id,
+        "region": blank_to_none(region) or "\uc11c\uc6b8",
         "title": blank_to_none(item.get("title")),
         "addr1": addr1,
         "addr2": blank_to_none(item.get("addr2")),
@@ -122,29 +158,51 @@ def map_item(item: dict[str, Any], default_type_id: int) -> dict[str, Any]:
         "copyright_type": blank_to_none(item.get("cpyrhtDivCd")),
         "source_created_at": to_datetime(item.get("createdtime")),
         "source_modified_at": to_datetime(item.get("modifiedtime")),
+        "event_start_date": event_start_date,
+        "event_end_date": event_end_date,
+        "_has_event_dates": has_event_dates,
     }
 
 
-def should_update(existing: Place, incoming: dict[str, Any]) -> bool:
+def should_update(
+    existing: Place, incoming: dict[str, Any], has_event_dates: bool
+) -> bool:
     incoming_modified = incoming.get("source_modified_at")
-    if existing.source_modified_at is None:
+    if existing.source_modified_at is None and incoming_modified is not None:
         return True
-    if incoming_modified is None:
-        return False
-    return incoming_modified > existing.source_modified_at
+    if (
+        incoming_modified is not None
+        and existing.source_modified_at is not None
+        and incoming_modified > existing.source_modified_at
+    ):
+        return True
+
+    if has_event_dates:
+        return any(
+            getattr(existing, key) != incoming.get(key)
+            for key in ("event_start_date", "event_end_date")
+        )
+    return False
 
 
 def seed() -> None:
-    Base.metadata.create_all(bind=engine)
+    ensure_place_columns()
     db = SessionLocal()
-    stats: dict[str, dict[str, int]] = {}
+    stats = {
+        content_type_id: {"inserted": 0, "updated": 0}
+        for content_type_id in TARGET_TYPES
+    }
 
     try:
-        for label, path, default_type_id in SEED_FILES:
-            inserted = 0
-            updated = 0
-            for raw_item in load_items(path):
-                data = map_item(raw_item, default_type_id)
+        for _path, payload in iter_seed_payloads():
+            default_type_id = to_int(payload.get("contentTypeId"))
+            region = payload.get("region")
+            if default_type_id not in TARGET_TYPES:
+                continue
+
+            for raw_item in payload.get("items", []):
+                data = map_item(raw_item, region, default_type_id)
+                has_event_dates = data.pop("_has_event_dates")
                 if not data["content_id"] or not data["title"]:
                     continue
 
@@ -155,15 +213,18 @@ def seed() -> None:
                 )
                 if existing is None:
                     db.add(Place(**data))
-                    inserted += 1
+                    stats[data["content_type_id"]]["inserted"] += 1
                     continue
 
-                if should_update(existing, data):
+                if should_update(existing, data, has_event_dates):
                     for key, value in data.items():
+                        if (
+                            not has_event_dates
+                            and key in ("event_start_date", "event_end_date")
+                        ):
+                            continue
                         setattr(existing, key, value)
-                    updated += 1
-
-            stats[label] = {"inserted": inserted, "updated": updated}
+                    stats[data["content_type_id"]]["updated"] += 1
 
         db.commit()
     except Exception:
@@ -175,13 +236,20 @@ def seed() -> None:
     verify_db = SessionLocal()
     try:
         total = verify_db.query(Place).count()
+        saved_counts = {
+            content_type_id: verify_db.query(Place)
+            .filter(Place.content_type_id == content_type_id)
+            .count()
+            for content_type_id in TARGET_TYPES
+        }
     finally:
         verify_db.close()
 
-    for label in ("관광지", "축제"):
-        print(f"{label} 신규: {stats[label]['inserted']}")
-        print(f"{label} 업데이트: {stats[label]['updated']}")
-    print(f"총 저장 데이터: {total}")
+    for content_type_id, label in TARGET_TYPES.items():
+        print(f"{label} \uc2e0\uaddc: {stats[content_type_id]['inserted']}")
+        print(f"{label} \uc5c5\ub370\uc774\ud2b8: {stats[content_type_id]['updated']}")
+        print(f"{label} \uc800\uc7a5 \uac1c\uc218: {saved_counts[content_type_id]}")
+    print(f"\ucd1d \uc800\uc7a5 \uac1c\uc218: {total}")
 
 
 if __name__ == "__main__":
