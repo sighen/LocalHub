@@ -1,6 +1,10 @@
 <script setup>
 const form = defineModel({ required: true })
 
+defineProps({
+  error: { type: String, default: '' }
+})
+
 const emit = defineEmits(['close', 'submit'])
 
 const handleImageUpload = (event) => {
@@ -19,7 +23,7 @@ const handleImageUpload = (event) => {
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
         <h3 class="text-base font-black text-slate-900">{{ form.id ? '익명 소식 수정하기' : '새로운 소식 등록하기' }}</h3>
-        <button @click="emit('close')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        <button @click="emit('close')" class="p-1.5 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <form @submit.prevent="emit('submit')" class="p-6 space-y-4">
@@ -62,6 +66,8 @@ const handleImageUpload = (event) => {
             <button type="button" @click="form.image = ''" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-[10px]"><i class="fa-solid fa-trash"></i></button>
           </div>
         </div>
+
+        <p v-if="error" class="text-[11px] text-red-500 font-bold">{{ error }}</p>
 
         <div class="px-4 py-2 bg-slate-50 border-t flex justify-end gap-2 -mx-6 -mb-6">
           <button type="button" @click="emit('close')" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">취소</button>

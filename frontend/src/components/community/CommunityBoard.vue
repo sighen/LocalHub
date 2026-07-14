@@ -3,7 +3,9 @@ const props = defineProps({
   filteredPosts: { type: Array, required: true },
   boardTagFilter: { type: String, required: true },
   filterBookmarkedOnly: { type: Boolean, required: true },
-  searchQuery: { type: String, required: true }
+  searchQuery: { type: String, required: true },
+  isLoading: { type: Boolean, default: false },
+  loadError: { type: Boolean, default: false }
 })
 
 const emit = defineEmits([
@@ -13,7 +15,8 @@ const emit = defineEmits([
   'open-create',
   'open-read',
   'like-post',
-  'toggle-bookmark'
+  'toggle-bookmark',
+  'retry'
 ])
 </script>
 
@@ -43,7 +46,7 @@ const emit = defineEmits([
 
       <div class="md:col-span-5 flex flex-wrap gap-1.5">
         <button
-          v-for="tagOpt in ['', '축제', '맛집', '여행정보']"
+          v-for="tagOpt in ['', '관광지', '맛집', '축제', '잡담']"
           :key="tagOpt || 'all'"
           @click="emit('update:boardTagFilter', tagOpt)"
           :class="['px-3 py-1.5 text-xs font-bold rounded-lg transition', boardTagFilter === tagOpt ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
@@ -71,7 +74,18 @@ const emit = defineEmits([
         <span>암호 기반 자율 수정·삭제 보장</span>
       </div>
 
-      <div v-if="filteredPosts.length === 0" class="p-16 text-center text-slate-400 space-y-2">
+      <div v-if="isLoading" class="p-16 text-center text-slate-400 space-y-2">
+        <i class="fa-solid fa-spinner fa-spin text-3xl block mb-2"></i>
+        <p class="text-sm font-semibold">게시글을 불러오는 중입니다...</p>
+      </div>
+
+      <div v-else-if="loadError" class="p-16 text-center text-slate-400 space-y-3">
+        <i class="fa-solid fa-triangle-exclamation text-4xl block mb-2 text-amber-400"></i>
+        <p class="text-sm font-semibold text-slate-500">게시글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>
+        <button @click="emit('retry')" class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition">다시 시도</button>
+      </div>
+
+      <div v-else-if="filteredPosts.length === 0" class="p-16 text-center text-slate-400 space-y-2">
         <i class="fa-regular fa-folder-open text-4xl block mb-2"></i>
         <p class="text-sm font-semibold">게시글이 존재하지 않습니다.</p>
         <p class="text-xs text-slate-300">첫 소식의 주인공이 되어보세요!</p>
