@@ -4,7 +4,8 @@ import client from '../../api/client'
 import { useToast } from '../../composables/useToast'
 
 const props = defineProps({
-  post: { type: Object, required: true }
+  post: { type: Object, required: true },
+  readOnly: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['close', 'like', 'toggle-bookmark', 'edit', 'delete'])
@@ -122,7 +123,7 @@ onMounted(() => {
             </button>
           </div>
 
-          <div class="flex gap-2">
+          <div v-if="!readOnly" class="flex gap-2">
             <button @click="emit('edit')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">수정</button>
             <button @click="emit('delete')" class="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition">삭제</button>
           </div>
