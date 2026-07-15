@@ -99,15 +99,6 @@ export function useFestivals() {
     }
   }
 
-  const fetchRelatedPosts = async (title) => {
-    try {
-      const { data } = await client.get('/posts', { params: { keyword: title, size: 5 } })
-      return data.items
-    } catch (e) {
-      return []
-    }
-  }
-
   return {
     year,
     month,
@@ -124,7 +115,6 @@ export function useFestivals() {
     loadFacets,
     goToMonth,
     selectDistrict,
-    fetchFestivalDetail,
-    fetchRelatedPosts
+    fetchFestivalDetail
   }
 }

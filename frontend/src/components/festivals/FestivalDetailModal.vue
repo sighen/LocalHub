@@ -1,18 +1,38 @@
 <script setup>
+import { ref, watch } from 'vue'
 import ExploreMap from '../explore/ExploreMap.vue'
+import client from '../../api/client'
 import { formatEventPeriod } from '../../composables/useFestivals'
+import { useAppNavigation } from '../../composables/useAppNavigation'
+import { secureImageUrl } from '../../utils/imageUrl'
 
-defineProps({
+const props = defineProps({
   place: { type: Object, default: null },
-  relatedPosts: { type: Array, default: () => [] },
   isLoading: { type: Boolean, default: false },
   loadError: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['close', 'retry', 'open-post'])
+const emit = defineEmits(['close', 'retry'])
+
+const { requestWriteReview, requestViewReviews } = useAppNavigation()
+
+const reviewCount = ref(0)
+
+const loadReviewCount = async () => {
+  if (!props.place) return
+  try {
+    const { data } = await client.get('/posts', { params: { place_content_id: props.place.content_id, size: 1 } })
+    reviewCount.value = data.total
+  } catch (e) {
+    reviewCount.value = 0
+  }
+}
+
+watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediate: true })
 </script>
 
 <template>
+  <Teleport to="body">
   <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
@@ -34,7 +54,7 @@ const emit = defineEmits(['close', 'retry', 'open-post'])
 
         <template v-else>
           <div v-if="place.image_url" class="h-48 rounded-xl overflow-hidden border border-slate-200">
-            <img :src="place.image_url" :alt="place.title" class="w-full h-full object-cover" />
+            <img :src="secureImageUrl(place.image_url)" :alt="place.title" class="w-full h-full object-cover" />
           </div>
 
           <div class="space-y-1.5">
@@ -61,25 +81,16 @@ const emit = defineEmits(['close', 'retry', 'open-post'])
             <ExploreMap :places="[place]" height="h-56" />
           </div>
 
-          <div class="border-t border-slate-100 pt-4 space-y-2">
-            <h4 class="text-xs font-black text-slate-700">관련 커뮤니티 게시글</h4>
-            <div v-if="relatedPosts.length === 0" class="text-[11px] text-slate-300 py-4 text-center">
-              관련된 커뮤니티 게시글이 없습니다.
-            </div>
-            <div v-else class="space-y-2">
-              <div
-                v-for="post in relatedPosts"
-                :key="post.id"
-                @click="emit('open-post', post.id)"
-                class="bg-slate-50 rounded-xl px-3.5 py-2.5 cursor-pointer hover:bg-slate-100 transition"
-              >
-                <p class="text-xs font-bold text-slate-700 truncate">{{ post.title }}</p>
-                <p class="text-[10px] text-slate-400">댓글 {{ post.comment_count }}개 · 조회 {{ post.view_count }}</p>
-              </div>
+          <div class="border-t border-slate-100 pt-4 flex items-center justify-between gap-3 flex-wrap">
+            <span class="text-xs font-bold text-slate-600"><i class="fa-regular fa-comment-dots mr-1.5 text-slate-400"></i>커뮤니티 후기 {{ reviewCount }}개</span>
+            <div class="flex gap-2">
+              <button @click="requestViewReviews(place)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">리뷰 보기</button>
+              <button @click="requestWriteReview(place)" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition">이 장소 리뷰 쓰기</button>
             </div>
           </div>
         </template>
       </div>
     </div>
   </div>
+  </Teleport>
 </template>

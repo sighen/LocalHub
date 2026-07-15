@@ -1,12 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useFestivals } from '../../composables/useFestivals'
-import { usePosts } from '../../composables/usePosts'
-import { useToast } from '../../composables/useToast'
+import { useRouter } from '../../composables/useRouter'
 import FestivalCalendar from './FestivalCalendar.vue'
 import FestivalList from './FestivalList.vue'
 import FestivalDetailModal from './FestivalDetailModal.vue'
-import PostReadModal from '../community/PostReadModal.vue'
 
 const {
   year,
@@ -23,23 +21,21 @@ const {
   loadFacets,
   goToMonth,
   selectDistrict,
-  fetchFestivalDetail,
-  fetchRelatedPosts
+  fetchFestivalDetail
 } = useFestivals()
 
-const { fetchPostDetail, likePost, toggleBookmark } = usePosts()
-const { showToast } = useToast()
+const { segments, navigate } = useRouter()
+
+// URL이 /festivals/:id면 상세, /festivals면 목록. 브라우저 뒤로/앞으로가기로
+// segments가 바뀌면 이 감시자가 상세를 열고/닫는다.
+const detailId = computed(() => (segments.value[0] === 'festivals' ? segments.value[1] || null : null))
 
 const selectedContentId = ref(null)
 const detailPlace = ref(null)
-const relatedPosts = ref([])
 const isDetailLoading = ref(false)
 const detailLoadError = ref(false)
 
-const selectedPost = ref(null)
-const isPostModalOpen = ref(false)
-
-const openDetail = async (contentId) => {
+const loadDetail = async (contentId) => {
   selectedContentId.value = contentId
   isDetailLoading.value = true
   detailLoadError.value = false
@@ -50,44 +46,40 @@ const openDetail = async (contentId) => {
       return
     }
     detailPlace.value = place
-    relatedPosts.value = await fetchRelatedPosts(place.title)
   } finally {
     isDetailLoading.value = false
   }
 }
 
+watch(detailId, (id) => {
+  if (id) {
+    loadDetail(id)
+  } else {
+    selectedContentId.value = null
+    detailPlace.value = null
+  }
+})
+
 const retryDetail = () => {
-  if (selectedContentId.value) openDetail(selectedContentId.value)
+  if (detailId.value) loadDetail(detailId.value)
+}
+
+const openDetail = (contentId) => {
+  navigate(`/festivals/${contentId}`)
 }
 
 const closeDetail = () => {
-  selectedContentId.value = null
-  detailPlace.value = null
-  relatedPosts.value = []
-}
-
-const openPost = async (postId) => {
-  const post = await fetchPostDetail(postId)
-  if (!post) {
-    showToast('게시글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.')
-    return
-  }
-  selectedPost.value = post
-  isPostModalOpen.value = true
-}
-
-const closePost = () => {
-  isPostModalOpen.value = false
-  selectedPost.value = null
+  navigate('/festivals')
 }
 
 const retryList = () => {
   loadFestivals()
 }
 
-onMounted(() => {
-  loadFacets()
-  loadFestivals()
+onMounted(async () => {
+  await Promise.all([loadFacets(), loadFestivals()])
+
+  if (detailId.value) loadDetail(detailId.value)
 })
 </script>
 
@@ -98,15 +90,24 @@ onMounted(() => {
         <h2 class="text-3xl font-black text-slate-900 tracking-tight">축제 · 공연 · 행사</h2>
         <p class="text-sm text-slate-500 mt-1">서울시 공공데이터 기반으로 진행 중이거나 예정된 축제·행사를 찾아보세요.</p>
       </div>
+    </div>
 
-      <select
-        :value="district"
-        @change="selectDistrict($event.target.value)"
-        class="px-3 py-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shrink-0"
+    <div class="flex flex-wrap items-center gap-1.5">
+      <span class="text-xs font-black text-slate-700 mr-1">권역</span>
+      <button
+        @click="selectDistrict('')"
+        :class="['px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition', !district ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
       >
-        <option value="">전체 권역</option>
-        <option v-for="d in facets.districts" :key="d.value" :value="d.value">{{ d.value }} ({{ d.count }})</option>
-      </select>
+        전체
+      </button>
+      <button
+        v-for="d in facets.districts"
+        :key="d.value"
+        @click="selectDistrict(d.value)"
+        :class="['px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition', district === d.value ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+      >
+        {{ d.value }} <span class="opacity-60">{{ d.count }}</span>
+      </button>
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-4">
@@ -157,21 +158,10 @@ onMounted(() => {
     <FestivalDetailModal
       v-if="selectedContentId"
       :place="detailPlace"
-      :related-posts="relatedPosts"
       :is-loading="isDetailLoading"
       :load-error="detailLoadError"
       @close="closeDetail"
       @retry="retryDetail"
-      @open-post="openPost"
-    />
-
-    <PostReadModal
-      v-if="isPostModalOpen"
-      :post="selectedPost"
-      read-only
-      @close="closePost"
-      @like="likePost"
-      @toggle-bookmark="toggleBookmark"
     />
   </div>
 </template>

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import client from '../../api/client'
 import { useToast } from '../../composables/useToast'
+import { useAppNavigation } from '../../composables/useAppNavigation'
 
 const props = defineProps({
   post: { type: Object, required: true },
@@ -11,6 +12,12 @@ const props = defineProps({
 const emit = defineEmits(['close', 'like', 'toggle-bookmark', 'edit', 'delete'])
 
 const { showToast } = useToast()
+const { goToPlace } = useAppNavigation()
+
+const openLinkedPlace = () => {
+  goToPlace(props.post.placeContentId, props.post.placeContentTypeId)
+  emit('close')
+}
 
 const comments = ref([])
 const isCommentsLoading = ref(false)
@@ -56,7 +63,11 @@ const submitComment = async () => {
     newCommentPassword.value = ''
     await fetchComments()
   } catch (e) {
-    showToast('댓글 등록에 실패했어요. 잠시 후 다시 시도해주세요.')
+    if (e?.response?.status === 400) {
+      showToast(e.response.data?.detail || '등록할 수 없는 내용입니다.')
+    } else {
+      showToast('댓글 등록에 실패했어요. 잠시 후 다시 시도해주세요.')
+    }
   }
 }
 
@@ -85,6 +96,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <Teleport to="body">
   <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
@@ -94,6 +106,13 @@ onMounted(() => {
 
       <div class="p-6 space-y-5 overflow-y-auto">
         <div class="space-y-1.5">
+          <button
+            v-if="post.placeContentId"
+            @click="openLinkedPlace"
+            class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg hover:bg-emerald-100 transition"
+          >
+            <i class="fa-solid fa-location-dot mr-1"></i>{{ post.placeTitle }}
+          </button>
           <h3 class="text-xl font-black text-slate-900 leading-tight">{{ post.title }}</h3>
           <div class="flex items-center gap-3 text-xs text-slate-400">
             <span>👤 익명</span>
@@ -182,4 +201,5 @@ onMounted(() => {
       </div>
     </div>
   </div>
+  </Teleport>
 </template>

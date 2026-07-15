@@ -14,6 +14,11 @@ class Post(Base):
     category = Column(String, nullable=True)
     password = Column(String, nullable=False)  # 평문 저장 — 교육 목적 의도된 설계
     view_count = Column(Integer, default=0)
+    # 관광지/문화시설/레포츠/축제 상세에서 "이 장소 리뷰 쓰기"로 작성된 경우 연결된 장소 스냅샷.
+    # Place row가 나중에 갱신/삭제되어도 표시가 깨지지 않도록 제목/타입을 그대로 저장한다.
+    place_content_id = Column(String, nullable=True)
+    place_title = Column(String, nullable=True)
+    place_content_type_id = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

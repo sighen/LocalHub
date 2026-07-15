@@ -1,7 +1,11 @@
 <script setup>
+import { ref, watch } from 'vue'
 import ExploreMap from './ExploreMap.vue'
+import client from '../../api/client'
 import { useWeather } from '../../composables/useWeather'
+import { useAppNavigation } from '../../composables/useAppNavigation'
 import { tagLabel } from '../../utils/tagLabels'
+import { secureImageUrl } from '../../utils/imageUrl'
 
 const props = defineProps({
   place: { type: Object, default: null },
@@ -13,6 +17,21 @@ const props = defineProps({
 const emit = defineEmits(['back', 'retry'])
 
 const { weatherData } = useWeather()
+const { requestWriteReview, requestViewReviews } = useAppNavigation()
+
+const reviewCount = ref(0)
+
+const loadReviewCount = async () => {
+  if (!props.place) return
+  try {
+    const { data } = await client.get('/posts', { params: { place_content_id: props.place.content_id, size: 1 } })
+    reviewCount.value = data.total
+  } catch (e) {
+    reviewCount.value = 0
+  }
+}
+
+watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediate: true })
 </script>
 
 <template>
@@ -35,7 +54,7 @@ const { weatherData } = useWeather()
     <template v-else>
       <div class="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
         <div v-if="place.image_url" class="h-64 bg-slate-100 overflow-hidden">
-          <img :src="place.image_url" :alt="place.title" class="w-full h-full object-cover" />
+          <img :src="secureImageUrl(place.image_url)" :alt="place.title" class="w-full h-full object-cover" />
         </div>
 
         <div class="p-6 space-y-4">
@@ -62,6 +81,14 @@ const { weatherData } = useWeather()
           </div>
 
           <p v-if="place.overview" class="text-xs text-slate-600 leading-relaxed whitespace-pre-line border-t border-slate-100 pt-4">{{ place.overview }}</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-100 rounded-3xl shadow-sm p-5 flex items-center justify-between gap-3 flex-wrap">
+        <span class="text-xs font-bold text-slate-600"><i class="fa-regular fa-comment-dots mr-1.5 text-slate-400"></i>커뮤니티 후기 {{ reviewCount }}개</span>
+        <div class="flex gap-2">
+          <button @click="requestViewReviews(place)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">리뷰 보기</button>
+          <button @click="requestWriteReview(place)" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition">이 장소 리뷰 쓰기</button>
         </div>
       </div>
 

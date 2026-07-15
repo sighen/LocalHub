@@ -10,6 +10,7 @@ class PostCreate(BaseModel):
     content: str
     category: Optional[str] = None
     password: str
+    place_content_id: Optional[str] = None
 
 
 class PostUpdate(BaseModel):
@@ -17,6 +18,7 @@ class PostUpdate(BaseModel):
     content: str
     category: Optional[str] = None
     password: str
+    place_content_id: Optional[str] = None
 
 
 class PostDelete(BaseModel):
@@ -30,6 +32,9 @@ class PostListItem(BaseModel):
     view_count: int
     comment_count: int
     created_at: datetime
+    place_content_id: Optional[str] = None
+    place_title: Optional[str] = None
+    place_content_type_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -43,6 +48,9 @@ class PostDetail(BaseModel):
     view_count: int
     created_at: datetime
     updated_at: datetime
+    place_content_id: Optional[str] = None
+    place_title: Optional[str] = None
+    place_content_type_id: Optional[int] = None
 
     class Config:
         from_attributes = True

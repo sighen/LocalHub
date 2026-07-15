@@ -27,6 +27,17 @@ const handleImageUpload = (event) => {
       </div>
 
       <form @submit.prevent="emit('submit')" class="p-6 space-y-4">
+        <div v-if="form.placeContentId" class="flex items-center justify-between gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl">
+          <span class="text-xs font-bold text-blue-700"><i class="fa-solid fa-location-dot mr-1"></i>{{ form.placeTitle }}</span>
+          <button
+            type="button"
+            @click="form.placeContentId = null; form.placeTitle = ''; form.placeContentTypeId = null"
+            class="text-[10px] font-bold text-blue-400 hover:text-blue-600"
+          >
+            연결 해제
+          </button>
+        </div>
+
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1">카테고리</label>
           <select v-model="form.category" class="w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
