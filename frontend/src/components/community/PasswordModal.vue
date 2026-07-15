@@ -9,7 +9,7 @@ const emit = defineEmits(['close', 'confirm'])
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4" @click.self="emit('close')">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xs overflow-hidden animate-fade-in">
       <div class="px-4 py-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
         <h4 class="text-xs font-black text-slate-900">비밀번호 확인</h4>
@@ -21,6 +21,7 @@ const emit = defineEmits(['close', 'confirm'])
           type="password"
           v-model="pwVerifyInput"
           placeholder="비밀번호 입력"
+          @keyup.enter="emit('confirm')"
           class="w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p v-if="pwError" class="text-[10px] text-red-500 font-bold">비밀번호가 일치하지 않습니다.</p>

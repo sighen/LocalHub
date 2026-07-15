@@ -33,7 +33,7 @@ watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediat
 
 <template>
   <Teleport to="body">
-  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" @click.self="emit('close')">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
         <span class="px-2.5 py-1 bg-orange-50 text-orange-600 text-xs font-bold rounded-lg border border-orange-100">축제·행사</span>

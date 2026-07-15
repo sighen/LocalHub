@@ -97,7 +97,7 @@ onMounted(() => {
 
 <template>
   <Teleport to="body">
-  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" @click.self="emit('close')">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
         <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg border border-blue-100">{{ post.category }}</span>
@@ -170,6 +170,7 @@ onMounted(() => {
                   type="password"
                   v-model="deletePasswordInput"
                   placeholder="비밀번호 입력"
+                  @keyup.enter="confirmDeleteComment(comment.id)"
                   class="flex-grow px-3 py-1.5 text-[11px] bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button @click="confirmDeleteComment(comment.id)" class="px-3 py-1.5 text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg">삭제 확인</button>
