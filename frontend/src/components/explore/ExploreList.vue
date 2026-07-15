@@ -1,6 +1,8 @@
 <script setup>
 import { tagLabel } from '../../utils/tagLabels'
 import { secureImageUrl } from '../../utils/imageUrl'
+import defaultPlace from '../../assets/default-place.svg'
+import { resolvePlaceImage, resolvePlaceImageCandidates } from '../../utils/placeImage'
 
 const props = defineProps({
   places: { type: Array, required: true },
@@ -14,6 +16,20 @@ const props = defineProps({
 const emit = defineEmits(['open-detail', 'retry', 'go-to-page'])
 
 const totalPages = () => Math.max(1, Math.ceil(props.total / props.pageSize))
+
+// A place can have multiple candidate image URLs (e.g. image_url, thumbnail_url)
+// and any one of them may be a dead link on the upstream CDN, so on error we
+// try the next candidate before finally falling back to the placeholder.
+function onImageError(event, place) {
+  const candidates = resolvePlaceImageCandidates(place).map((c) => secureImageUrl(c) || c)
+  const nextIndex = Number(event.target.dataset.fallbackIndex || 0) + 1
+  if (nextIndex < candidates.length) {
+    event.target.dataset.fallbackIndex = nextIndex
+    event.target.src = candidates[nextIndex]
+  } else {
+    event.target.src = defaultPlace
+  }
+}
 </script>
 
 <template>
@@ -44,15 +60,17 @@ const totalPages = () => Math.max(1, Math.ceil(props.total / props.pageSize))
           class="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg hover:border-blue-100 transition duration-300 cursor-pointer"
         >
           <div class="h-40 bg-slate-100 overflow-hidden relative">
-            <img
-              v-if="place.thumbnail_url || place.image_url"
-              :src="secureImageUrl(place.thumbnail_url || place.image_url)"
-              :alt="place.title"
-              class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
-            />
-            <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
-              <i class="fa-regular fa-image text-3xl"></i>
-            </div>
+            <template v-if="resolvePlaceImage(place)">
+              <img
+                :src="secureImageUrl(resolvePlaceImage(place)) || defaultPlace"
+                :alt="place.title"
+                class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+                @error="(e) => onImageError(e, place)"
+              />
+            </template>
+            <template v-else>
+              <div class="w-full h-full bg-slate-200"></div>
+            </template>
           </div>
           <div class="p-4 space-y-1.5">
             <div class="flex items-center gap-1.5 text-[10px]">
