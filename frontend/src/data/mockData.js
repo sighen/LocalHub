@@ -1,24 +1,24 @@
 export const heroSlides = [
   {
-    tag: 'SEOUL SUMMER FESTIVAL',
-    titleLine1: '더위를 잊고 시원하게 즐기는',
-    titleLine2: '서울의 여름',
-    desc: '광화문광장의 서울썸머비치 물놀이 축제와 시원한 한강공원 수영장으로 한여름 무더위를 날려보세요.',
-    img: 'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?auto=format&fit=crop&w=1200&q=80'
+    tag: 'SEBITSEOM YACHT TOUR',
+    titleLine1: '한강 물빛 위에서 즐기는',
+    titleLine2: '세빛섬 요트 투어',
+    desc: '세빛섬 수상 문화 공간에서 요트투어·카약체험·패들보드를 즐기고, 프러포즈부터 기업행사·파티까지 낮과 밤 모두 아름다운 한강 도심 전망과 함께 특별하게 만들어보세요.',
+    img: 'https://d2mgzmtdeipcjp.cloudfront.net/files/good/2023/03/20/16793031281968.jpg'
   },
   {
-    tag: 'NIGHT VIEW TOUR',
-    titleLine1: '달빛 아래 수놓아진 아름다운',
-    titleLine2: '경복궁 야간 특별 관람',
-    desc: '조선 왕조 본궁의 고요하고 우아한 정취를 품격 높은 가을맞이 야간 산책 코스로 예약하고 체험하세요.',
-    img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1200&q=80'
+    tag: 'SEOUL SUMMER BEACH',
+    titleLine1: 'Wave Summer, Play Seoul',
+    titleLine2: '서울썸머비치',
+    desc: '광화문광장·세종로공원에서 열리는 서울 대표 여름 축제. 워터플레이존의 수영장·워터슬라이드부터 플레이웨이브존의 샌드아지트까지, 도심 속 시원한 물놀이와 여유로운 휴식을 함께 즐겨보세요.',
+    img: 'https://kfescdn.visitkorea.or.kr/kfes/upload/contents/db/c5cea11d-e3f0-4300-a3a6-d5159d5b00f0_46.jpg'
   },
   {
-    tag: 'WATER ACTIVITY',
-    titleLine1: '한강의 거센 물살과 바람을 가르는',
-    titleLine2: '뚝섬 한강 레포츠 체험',
-    desc: '도심 속 자연 한강공원에서 서핑과 카약 등 한여름 무더위를 날릴 시원한 라이프 활동을 만나보세요.',
-    img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80'
+    tag: 'HANGANG NIGHT WALK 42K',
+    titleLine1: '한강의 밤을 함께 걷는',
+    titleLine2: '2026 한강나이트워크42K',
+    desc: '42K·22K·14K 중 원하는 코스를 골라 밤새 한강의 야경을 걸으며 완주의 감동을 느껴보세요. 11년째 이어온 걷기 축제가 올해도 특별한 추억을 선사합니다.',
+    img: 'https://festanote.com/wp-content/uploads/2026/06/%ED%95%9C%EA%B0%95%EB%82%98%EC%9D%B4%ED%8A%B8%EC%9B%8C%ED%81%AC-3.webp'
   }
 ]
 
