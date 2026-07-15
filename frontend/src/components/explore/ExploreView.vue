@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useLocations } from '../../composables/useLocations'
+import { useAppNavigation } from '../../composables/useAppNavigation'
 import ExploreFilters from './ExploreFilters.vue'
 import ExploreList from './ExploreList.vue'
 import ExploreMap from './ExploreMap.vue'
@@ -33,6 +34,8 @@ const {
   fetchPlaceDetail,
   fetchNearby
 } = useLocations()
+
+const { consumePlaceIntent } = useAppNavigation()
 
 const CATEGORIES = ['관광지', '문화시설', '레포츠']
 
@@ -87,6 +90,16 @@ const retryList = () => {
 }
 
 onMounted(() => {
+  const intent = consumePlaceIntent()
+  if (intent?.category && CATEGORIES.includes(intent.category)) {
+    activeCategory.value = intent.category
+    loadFacets()
+    loadPlaces()
+    loadMapPoints()
+    openDetail(intent.contentId)
+    return
+  }
+
   loadFacets()
   loadPlaces()
   loadMapPoints()

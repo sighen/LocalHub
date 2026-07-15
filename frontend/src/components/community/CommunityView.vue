@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { usePosts } from '../../composables/usePosts'
 import { useToast } from '../../composables/useToast'
+import { useAppNavigation } from '../../composables/useAppNavigation'
 import CommunityBoard from './CommunityBoard.vue'
 import PostReadModal from './PostReadModal.vue'
 import PostWriteModal from './PostWriteModal.vue'
@@ -14,6 +15,8 @@ const {
   filteredPosts,
   isLoading,
   loadError,
+  placeFilter,
+  setPlaceFilter,
   loadPosts,
   fetchPostDetail,
   createPost,
@@ -25,6 +28,7 @@ const {
 } = usePosts()
 
 const { showToast } = useToast()
+const { consumeCommunityIntent, goToPlace } = useAppNavigation()
 
 const isReadModalOpen = ref(false)
 const isWriteModalOpen = ref(false)
@@ -32,16 +36,34 @@ const isPwModalOpen = ref(false)
 const pwError = ref(false)
 const pwVerifyInput = ref('')
 const writeError = ref('')
+const placeFilterTitle = ref('')
 
 const currentActivePost = ref({})
-const postForm = ref({ id: null, category: '관광지', title: '', content: '', password: '', tagsRaw: '', image: '' })
+const blankPostForm = () => ({
+  id: null,
+  category: '관광지',
+  title: '',
+  content: '',
+  password: '',
+  tagsRaw: '',
+  image: '',
+  placeContentId: null,
+  placeTitle: '',
+  placeContentTypeId: null
+})
+const postForm = ref(blankPostForm())
 
 let activeAction = ''
 
 const openCreatePostModal = () => {
-  postForm.value = { id: null, category: '관광지', title: '', content: '', password: '', tagsRaw: '', image: '' }
+  postForm.value = blankPostForm()
   writeError.value = ''
   isWriteModalOpen.value = true
+}
+
+const clearPlaceFilter = () => {
+  placeFilterTitle.value = ''
+  setPlaceFilter(null)
 }
 
 const openReadPostModal = async (post) => {
@@ -66,6 +88,8 @@ const savePostForm = async () => {
   } catch (e) {
     if (e?.response?.status === 403) {
       writeError.value = '비밀번호가 일치하지 않습니다.'
+    } else if (e?.response?.status === 400) {
+      writeError.value = e.response.data?.detail || '등록할 수 없는 내용입니다.'
     } else {
       writeError.value = '저장에 실패했어요. 잠시 후 다시 시도해주세요.'
     }
@@ -88,7 +112,10 @@ const submitPasswordVerification = async () => {
       content: currentActivePost.value.content,
       password: pwVerifyInput.value,
       tagsRaw: currentActivePost.value.tags.join(', '),
-      image: currentActivePost.value.image
+      image: currentActivePost.value.image,
+      placeContentId: currentActivePost.value.placeContentId,
+      placeTitle: currentActivePost.value.placeTitle,
+      placeContentTypeId: currentActivePost.value.placeContentTypeId
     }
 
     try {
@@ -127,6 +154,23 @@ const submitPasswordVerification = async () => {
 }
 
 onMounted(() => {
+  const intent = consumeCommunityIntent()
+  if (intent?.type === 'write') {
+    postForm.value = {
+      ...blankPostForm(),
+      category: '관광지',
+      placeContentId: intent.placeContentId,
+      placeTitle: intent.placeTitle,
+      placeContentTypeId: intent.placeContentTypeId
+    }
+    writeError.value = ''
+    isWriteModalOpen.value = true
+  } else if (intent?.type === 'view-reviews') {
+    placeFilterTitle.value = intent.placeTitle
+    setPlaceFilter(intent.placeContentId)
+    return
+  }
+
   loadPosts()
 })
 </script>
@@ -137,6 +181,7 @@ onMounted(() => {
       :filtered-posts="filteredPosts"
       :is-loading="isLoading"
       :load-error="loadError"
+      :place-filter-title="placeFilterTitle"
       v-model:board-tag-filter="boardTagFilter"
       v-model:filter-bookmarked-only="filterBookmarkedOnly"
       v-model:search-query="searchQuery"
@@ -145,6 +190,8 @@ onMounted(() => {
       @like-post="likePost"
       @toggle-bookmark="toggleBookmark"
       @retry="loadPosts"
+      @clear-place-filter="clearPlaceFilter"
+      @go-to-place="(p) => goToPlace(p.contentId, p.contentTypeId)"
     />
 
     <PostReadModal
