@@ -5,7 +5,7 @@ const { customAlert, closeToast } = useToast()
 </script>
 
 <template>
-  <div v-if="customAlert.show" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+  <div v-if="customAlert.show" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4" @click.self="closeToast">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in border border-slate-100">
       <div class="p-6 space-y-4">
         <div class="flex items-center gap-3">

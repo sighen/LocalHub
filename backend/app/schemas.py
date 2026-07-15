@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 
 # ---------- Posts ----------
@@ -10,6 +10,7 @@ class PostCreate(BaseModel):
     content: str
     category: Optional[str] = None
     password: str
+    place_content_id: Optional[str] = None
 
 
 class PostUpdate(BaseModel):
@@ -17,6 +18,7 @@ class PostUpdate(BaseModel):
     content: str
     category: Optional[str] = None
     password: str
+    place_content_id: Optional[str] = None
 
 
 class PostDelete(BaseModel):
@@ -30,6 +32,9 @@ class PostListItem(BaseModel):
     view_count: int
     comment_count: int
     created_at: datetime
+    place_content_id: Optional[str] = None
+    place_title: Optional[str] = None
+    place_content_type_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -43,6 +48,9 @@ class PostDetail(BaseModel):
     view_count: int
     created_at: datetime
     updated_at: datetime
+    place_content_id: Optional[str] = None
+    place_title: Optional[str] = None
+    place_content_type_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -74,26 +82,55 @@ class CommentItem(BaseModel):
         from_attributes = True
 
 
-# ---------- Chat ----------
-class ChatMessage(BaseModel):
-    role: str  # "user" | "assistant"
-    content: str
-
-
 class ChatRequest(BaseModel):
-    message: str
-    history: Optional[List[ChatMessage]] = None
+    message: str = Field(..., min_length=1, max_length=500)
+
+    @field_validator("message")
+    @classmethod
+    def message_must_not_be_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("message must not be blank")
+        return stripped
 
 
-class ChatReference(BaseModel):
-    type: str  # "location" | "post"
-    id: str
+class ChatSearchCondition(BaseModel):
+    district_name: Optional[str] = None
+    content_type_ids: List[int] = Field(default_factory=list)
+    overview_keywords: List[str] = Field(default_factory=list)
+    event_date_from: Optional[str] = None
+    event_date_to: Optional[str] = None
+    limit: int = Field(default=5, ge=1, le=5)
+
+
+class AIRecommendation(BaseModel):
+    content_id: str
+    reason: str
+
+
+class AIFinalAnswer(BaseModel):
+    answer: str
+    recommendations: List[AIRecommendation] = Field(default_factory=list)
+
+
+class ChatPlace(BaseModel):
+    content_id: str
+    content_type_id: int
     title: str
+    district_name: Optional[str] = None
+    addr1: Optional[str] = None
+    addr2: Optional[str] = None
+    image_url: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    overview: Optional[str] = None
+    event_start_date: Optional[str] = None
+    event_end_date: Optional[str] = None
+    reason: str
 
 
 class ChatResponse(BaseModel):
-    reply: str
-    references: Optional[List[ChatReference]] = None
+    answer: str
+    places: List[ChatPlace] = Field(default_factory=list)
 
 
 # ---------- Locations ----------

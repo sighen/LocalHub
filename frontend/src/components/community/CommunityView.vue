@@ -1,7 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePosts } from '../../composables/usePosts'
 import { useToast } from '../../composables/useToast'
+import { useAppNavigation } from '../../composables/useAppNavigation'
+import { useRouter } from '../../composables/useRouter'
 import CommunityBoard from './CommunityBoard.vue'
 import PostReadModal from './PostReadModal.vue'
 import PostWriteModal from './PostWriteModal.vue'
@@ -14,6 +16,8 @@ const {
   filteredPosts,
   isLoading,
   loadError,
+  placeFilter,
+  setPlaceFilter,
   loadPosts,
   fetchPostDetail,
   createPost,
@@ -25,33 +29,87 @@ const {
 } = usePosts()
 
 const { showToast } = useToast()
+const { goToPlace } = useAppNavigation()
+const { segments, query, navigate } = useRouter()
+
+// 현재 쿼리스트링을 유지한 채 목록/작성 경로를 오갈 때 쓰는 헬퍼.
+// (예: ?place=123으로 필터링된 채 글을 읽고 다시 목록으로 돌아와도 필터 유지)
+const qs = computed(() => {
+  const s = query.value.toString()
+  return s ? `?${s}` : ''
+})
+
+// /community/post/:id 면 해당 글 상세, /community/write면 새 글 작성.
+const postId = computed(() => (segments.value[0] === 'community' && segments.value[1] === 'post' ? segments.value[2] || null : null))
+const isWriteRoute = computed(() => segments.value[0] === 'community' && segments.value[1] === 'write')
+const placeFilterId = computed(() => query.value.get('place') || null)
+const placeFilterTitle = computed(() => query.value.get('placeTitle') || '')
 
 const isReadModalOpen = ref(false)
-const isWriteModalOpen = ref(false)
+const isEditingLocally = ref(false)
+const isWriteModalOpen = computed(() => isWriteRoute.value || isEditingLocally.value)
 const isPwModalOpen = ref(false)
 const pwError = ref(false)
 const pwVerifyInput = ref('')
 const writeError = ref('')
 
 const currentActivePost = ref({})
-const postForm = ref({ id: null, category: '관광지', title: '', content: '', password: '', tagsRaw: '', image: '' })
+const blankPostForm = () => ({
+  id: null,
+  category: '관광지',
+  title: '',
+  content: '',
+  password: '',
+  tagsRaw: '',
+  image: '',
+  placeContentId: null,
+  placeTitle: '',
+  placeContentTypeId: null
+})
+const postForm = ref(blankPostForm())
 
 let activeAction = ''
 
-const openCreatePostModal = () => {
-  postForm.value = { id: null, category: '관광지', title: '', content: '', password: '', tagsRaw: '', image: '' }
-  writeError.value = ''
-  isWriteModalOpen.value = true
+const closeReadModal = () => {
+  isReadModalOpen.value = false
+  navigate(`/community${qs.value}`)
 }
 
-const openReadPostModal = async (post) => {
-  const detail = await fetchPostDetail(post.id)
-  if (!detail) {
-    showToast('게시글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.')
-    return
+const closeWriteModal = () => {
+  isEditingLocally.value = false
+  if (isWriteRoute.value) navigate(`/community${qs.value}`)
+}
+
+const openCreatePostModal = () => {
+  postForm.value = blankPostForm()
+  writeError.value = ''
+  navigate(`/community/write${qs.value}`)
+}
+
+const clearPlaceFilter = () => {
+  navigate('/community')
+}
+
+const openReadPostModal = (post) => {
+  navigate(`/community/post/${post.id}${qs.value}`)
+}
+
+// likePost/toggleBookmark는 목록(posts 배열)만 갱신한다. 읽기 모달은
+// currentActivePost라는 별도 스냅샷을 보여주고 있어서, 모달을 열어둔 채
+// 좋아요/북마크를 누르면 목록은 바뀌어도 모달 화면엔 반영되지 않는다.
+// 여기서 currentActivePost도 함께 갱신해서 바로 눈에 보이게 한다.
+const handleLikeFromModal = (id) => {
+  likePost(id)
+  if (currentActivePost.value.id === id) {
+    currentActivePost.value = { ...currentActivePost.value, likes: currentActivePost.value.likes + 1 }
   }
-  currentActivePost.value = detail
-  isReadModalOpen.value = true
+}
+
+const handleToggleBookmarkFromModal = (id) => {
+  toggleBookmark(id)
+  if (currentActivePost.value.id === id) {
+    currentActivePost.value = { ...currentActivePost.value, bookmarked: !currentActivePost.value.bookmarked }
+  }
 }
 
 const savePostForm = async () => {
@@ -62,10 +120,12 @@ const savePostForm = async () => {
     } else {
       await createPost(postForm.value)
     }
-    isWriteModalOpen.value = false
+    closeWriteModal()
   } catch (e) {
     if (e?.response?.status === 403) {
       writeError.value = '비밀번호가 일치하지 않습니다.'
+    } else if (e?.response?.status === 400) {
+      writeError.value = e.response.data?.detail || '등록할 수 없는 내용입니다.'
     } else {
       writeError.value = '저장에 실패했어요. 잠시 후 다시 시도해주세요.'
     }
@@ -88,7 +148,10 @@ const submitPasswordVerification = async () => {
       content: currentActivePost.value.content,
       password: pwVerifyInput.value,
       tagsRaw: currentActivePost.value.tags.join(', '),
-      image: currentActivePost.value.image
+      image: currentActivePost.value.image,
+      placeContentId: currentActivePost.value.placeContentId,
+      placeTitle: currentActivePost.value.placeTitle,
+      placeContentTypeId: currentActivePost.value.placeContentTypeId
     }
 
     try {
@@ -107,28 +170,60 @@ const submitPasswordVerification = async () => {
     writeError.value = ''
     isPwModalOpen.value = false
     isReadModalOpen.value = false
-    isWriteModalOpen.value = true
+    isEditingLocally.value = true
     return
   }
 
   try {
     await deletePost(currentActivePost.value.id, pwVerifyInput.value)
     isPwModalOpen.value = false
-    isReadModalOpen.value = false
+    closeReadModal()
   } catch (e) {
     if (e?.response?.status === 403) {
       pwError.value = true
     } else {
       isPwModalOpen.value = false
-      isReadModalOpen.value = false
+      closeReadModal()
       showToast('삭제에 실패했어요. 잠시 후 다시 시도해주세요.')
     }
   }
 }
 
-onMounted(() => {
-  loadPosts()
-})
+// postId가 바뀌면(다른 글을 열거나, 뒤로가기로 글을 닫거나) 진행 중이던
+// 로컬 수정 오버레이는 더 이상 유효하지 않으므로 정리한다.
+watch(postId, async (id) => {
+  isEditingLocally.value = false
+
+  if (!id) {
+    isReadModalOpen.value = false
+    return
+  }
+
+  const detail = await fetchPostDetail(id)
+  if (!detail) {
+    showToast('게시글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.')
+    navigate('/community', { replace: true })
+    return
+  }
+  currentActivePost.value = detail
+  isReadModalOpen.value = true
+}, { immediate: true })
+
+watch(isWriteRoute, (isWrite) => {
+  if (!isWrite) return
+  postForm.value = {
+    ...blankPostForm(),
+    category: '관광지',
+    placeContentId: query.value.get('placeId') || null,
+    placeTitle: query.value.get('placeTitle') || '',
+    placeContentTypeId: query.value.get('placeType') ? Number(query.value.get('placeType')) : null
+  }
+  writeError.value = ''
+}, { immediate: true })
+
+watch(placeFilterId, (id) => {
+  setPlaceFilter(id)
+}, { immediate: true })
 </script>
 
 <template>
@@ -137,6 +232,7 @@ onMounted(() => {
       :filtered-posts="filteredPosts"
       :is-loading="isLoading"
       :load-error="loadError"
+      :place-filter-title="placeFilterTitle"
       v-model:board-tag-filter="boardTagFilter"
       v-model:filter-bookmarked-only="filterBookmarkedOnly"
       v-model:search-query="searchQuery"
@@ -145,14 +241,16 @@ onMounted(() => {
       @like-post="likePost"
       @toggle-bookmark="toggleBookmark"
       @retry="loadPosts"
+      @clear-place-filter="clearPlaceFilter"
+      @go-to-place="(p) => goToPlace(p.contentId, p.contentTypeId)"
     />
 
     <PostReadModal
       v-if="isReadModalOpen"
       :post="currentActivePost"
-      @close="isReadModalOpen = false"
-      @like="likePost"
-      @toggle-bookmark="toggleBookmark"
+      @close="closeReadModal"
+      @like="handleLikeFromModal"
+      @toggle-bookmark="handleToggleBookmarkFromModal"
       @edit="triggerAction('edit')"
       @delete="triggerAction('delete')"
     />
@@ -161,7 +259,7 @@ onMounted(() => {
       v-if="isWriteModalOpen"
       v-model="postForm"
       :error="writeError"
-      @close="isWriteModalOpen = false"
+      @close="closeWriteModal"
       @submit="savePostForm"
     />
 

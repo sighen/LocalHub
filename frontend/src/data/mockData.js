@@ -22,14 +22,6 @@ export const heroSlides = [
   }
 ]
 
-export const upcomingEvents = [
-  { id: 101, title: '보태니컬전 당신 - 싱그러운', category: '전시/문화', dateStr: '06.25 ~ 04.11', dateSpan: ['2026-07-14', '2026-07-15', '2026-07-16', '2026-07-20'], img: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=300&h=400&q=80' },
-  { id: 102, title: 'COMPANY World Affair', category: '한류/문화', dateStr: '04.03 ~ 09.06', dateSpan: ['2026-07-14', '2026-07-15', '2026-07-18', '2026-07-22'], img: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=300&h=400&q=80' },
-  { id: 103, title: '채색찬란 - K로 가득한 지역', category: '전시/공연', dateStr: '06.04 ~ 12.31', dateSpan: ['2026-07-14', '2026-07-16', '2026-07-20', '2026-07-25'], img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=300&h=400&q=80' },
-  { id: 104, title: 'ICON : The Choir Series', category: '축제/행사', dateStr: '06.23 ~ 07.31', dateSpan: ['2026-07-14', '2026-07-15', '2026-07-16', '2026-07-17', '2026-07-24'], img: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=300&h=400&q=80' },
-  { id: 105, title: '여름식탁 : 여섯 개의 손, 하나의 식탁', category: '전시/공연', dateStr: '07.01 ~ 09.12', dateSpan: ['2026-07-14', '2026-07-17', '2026-07-21', '2026-07-27'], img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&h=400&q=80' }
-]
-
 export const exploreCategories = [
   { id: 1, code: 'EX', title: '체험', desc: '땀 흘린 만큼 짜릿한 서울의 이색 액티비티 체험 코스', img: 'https://images.unsplash.com/photo-1480480565647-1c4385c7c0bf?auto=format&fit=crop&w=400&h=300&q=80' },
   { id: 2, code: 'HS', title: '역사·인문', desc: '고궁과 옛 골목 그늘을 거니는 고즈넉한 역사·인문 산책', img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=400&h=300&q=80' },

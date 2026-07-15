@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useLocations } from '../../composables/useLocations'
+import { useRouter } from '../../composables/useRouter'
 import ExploreFilters from './ExploreFilters.vue'
 import ExploreDistrictMap from './ExploreDistrictMap.vue'
 import ExploreList from './ExploreList.vue'
@@ -40,7 +41,13 @@ const {
   fetchNearby
 } = useLocations()
 
+const { segments, query, navigate, goBack } = useRouter()
+
 const CATEGORIES = ['관광지', '문화시설', '레포츠']
+
+// URL이 /explore/:id면 상세, /explore면 목록. 브라우저 뒤로/앞으로가기를 누르면
+// segments가 바뀌면서 이 감시자가 상세를 열고/닫는다.
+const detailId = computed(() => (segments.value[0] === 'explore' ? segments.value[1] || null : null))
 
 const selectedContentId = ref(null)
 const detailPlace = ref(null)
@@ -48,7 +55,7 @@ const detailNearby = ref({ restaurants: [], lodgings: [] })
 const isDetailLoading = ref(false)
 const detailLoadError = ref(false)
 
-const openDetail = async (contentId) => {
+const loadDetail = async (contentId) => {
   selectedContentId.value = contentId
   isDetailLoading.value = true
   detailLoadError.value = false
@@ -65,13 +72,26 @@ const openDetail = async (contentId) => {
   }
 }
 
+watch(detailId, (id) => {
+  if (id) {
+    loadDetail(id)
+  } else {
+    selectedContentId.value = null
+    detailPlace.value = null
+  }
+})
+
 const retryDetail = () => {
-  if (selectedContentId.value) openDetail(selectedContentId.value)
+  if (detailId.value) loadDetail(detailId.value)
+}
+
+const openDetail = (contentId) => {
+  const category = query.value.get('category')
+  navigate(`/explore/${contentId}${category ? `?category=${encodeURIComponent(category)}` : ''}`)
 }
 
 const backToList = () => {
-  selectedContentId.value = null
-  detailPlace.value = null
+  goBack()
 }
 
 const onSelectTag = (value) => {
@@ -92,12 +112,24 @@ const retryList = () => {
   loadPlaces()
 }
 
+// 크로스탭 딥링크(/explore/:id?category=문화시설)로 들어온 경우, 상세 아래 깔린
+// 목록도 올바른 카테고리 탭으로 맞춰둔다.
+const queryCategory = computed(() => query.value.get('category'))
+watch(queryCategory, (category) => {
+  if (category && CATEGORIES.includes(category)) activeCategory.value = category
+}, { immediate: true })
+
 onMounted(() => {
-  activeCategory.value = props.initialCategory
-  tag.value = props.initialTag
+  if (!queryCategory.value && props.initialCategory && CATEGORIES.includes(props.initialCategory)) {
+    activeCategory.value = props.initialCategory
+  }
+  if (props.initialTag) tag.value = props.initialTag
+
   loadFacets()
   loadPlaces()
   loadMapPoints()
+
+  if (detailId.value) loadDetail(detailId.value)
 })
 </script>
 

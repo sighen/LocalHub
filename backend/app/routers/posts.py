@@ -6,14 +6,35 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
+from app.profanity import contains_banned_word
 
 router = APIRouter()
+
+
+def _apply_place_tag(post: models.Post, place_content_id: Optional[str], db: Session) -> None:
+    if not place_content_id:
+        post.place_content_id = None
+        post.place_title = None
+        post.place_content_type_id = None
+        return
+
+    place = db.query(models.Place).filter(models.Place.content_id == place_content_id).first()
+    if not place:
+        post.place_content_id = None
+        post.place_title = None
+        post.place_content_type_id = None
+        return
+
+    post.place_content_id = place.content_id
+    post.place_title = place.title
+    post.place_content_type_id = place.content_type_id
 
 
 @router.get("", response_model=schemas.PostListResponse)
 def list_posts(
     category: Optional[str] = None,
     keyword: Optional[str] = None,
+    place_content_id: Optional[str] = None,
     page: int = 1,
     size: int = 10,
     db: Session = Depends(get_db),
@@ -26,6 +47,8 @@ def list_posts(
         query = query.filter(
             (models.Post.title.like(like)) | (models.Post.content.like(like))
         )
+    if place_content_id:
+        query = query.filter(models.Post.place_content_id == place_content_id)
 
     total = query.count()
     posts = (
@@ -50,6 +73,9 @@ def list_posts(
                 view_count=p.view_count,
                 comment_count=comment_count,
                 created_at=p.created_at,
+                place_content_id=p.place_content_id,
+                place_title=p.place_title,
+                place_content_type_id=p.place_content_type_id,
             )
         )
 
@@ -80,12 +106,16 @@ def verify_post_password(post_id: int, payload: schemas.PostDelete, db: Session 
 
 @router.post("", status_code=201)
 def create_post(payload: schemas.PostCreate, db: Session = Depends(get_db)):
+    if contains_banned_word(payload.title, payload.content):
+        raise HTTPException(status_code=400, detail="부적절한 표현이 포함되어 있어 등록할 수 없습니다.")
+
     post = models.Post(
         title=payload.title,
         content=payload.content,
         category=payload.category,
         password=payload.password,
     )
+    _apply_place_tag(post, payload.place_content_id, db)
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -99,10 +129,13 @@ def update_post(post_id: int, payload: schemas.PostUpdate, db: Session = Depends
         raise HTTPException(status_code=404, detail="게시글을 찾을 수 없습니다.")
     if post.password != payload.password:
         raise HTTPException(status_code=403, detail="비밀번호가 일치하지 않습니다.")
+    if contains_banned_word(payload.title, payload.content):
+        raise HTTPException(status_code=400, detail="부적절한 표현이 포함되어 있어 등록할 수 없습니다.")
 
     post.title = payload.title
     post.content = payload.content
     post.category = payload.category
+    _apply_place_tag(post, payload.place_content_id, db)
     db.commit()
     db.refresh(post)
     return post

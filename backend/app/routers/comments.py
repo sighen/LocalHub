@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
+from app.profanity import contains_banned_word
 
 router = APIRouter()
 
@@ -24,6 +25,8 @@ def create_comment(post_id: int, payload: schemas.CommentCreate, db: Session = D
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="게시글을 찾을 수 없습니다.")
+    if contains_banned_word(payload.content):
+        raise HTTPException(status_code=400, detail="부적절한 표현이 포함되어 있어 등록할 수 없습니다.")
 
     comment = models.Comment(post_id=post_id, content=payload.content, password=payload.password)
     db.add(comment)

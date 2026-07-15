@@ -31,6 +31,7 @@ export function usePosts() {
   const searchQuery = ref('')
   const isLoading = ref(false)
   const loadError = ref(false)
+  const placeFilter = ref(null)
 
   const decorateListItem = (p) => {
     const overlay = loadOverlay()
@@ -45,7 +46,10 @@ export function usePosts() {
       likes: ov.likes,
       bookmarked: ov.bookmarked,
       tags: ov.tags,
-      image: ov.image
+      image: ov.image,
+      placeContentId: p.place_content_id,
+      placeTitle: p.place_title,
+      placeContentTypeId: p.place_content_type_id
     }
   }
 
@@ -62,7 +66,10 @@ export function usePosts() {
       likes: ov.likes,
       bookmarked: ov.bookmarked,
       tags: ov.tags,
-      image: ov.image
+      image: ov.image,
+      placeContentId: p.place_content_id,
+      placeTitle: p.place_title,
+      placeContentTypeId: p.place_content_type_id
     }
   }
 
@@ -87,13 +94,20 @@ export function usePosts() {
     isLoading.value = true
     loadError.value = false
     try {
-      const { data } = await client.get('/posts', { params: { size: 100 } })
+      const { data } = await client.get('/posts', {
+        params: { size: 100, place_content_id: placeFilter.value || undefined }
+      })
       posts.value = data.items.map(decorateListItem)
     } catch (e) {
       loadError.value = true
     } finally {
       isLoading.value = false
     }
+  }
+
+  const setPlaceFilter = (placeContentId) => {
+    placeFilter.value = placeContentId
+    loadPosts()
   }
 
   const fetchPostDetail = async (id) => {
@@ -112,7 +126,8 @@ export function usePosts() {
       title: form.title,
       content: form.content,
       category: form.category,
-      password: form.password
+      password: form.password,
+      place_content_id: form.placeContentId || undefined
     })
 
     const overlay = loadOverlay()
@@ -131,6 +146,9 @@ export function usePosts() {
       date: formatDate(data.created_at),
       views: 0,
       commentCount: 0,
+      placeContentId: form.placeContentId || null,
+      placeTitle: form.placeTitle || null,
+      placeContentTypeId: form.placeContentTypeId || null,
       ...overlay[data.id]
     })
   }
@@ -140,7 +158,8 @@ export function usePosts() {
       title: form.title,
       content: form.content,
       category: form.category,
-      password: form.password
+      password: form.password,
+      place_content_id: form.placeContentId || undefined
     })
 
     const overlay = loadOverlay()
@@ -155,7 +174,10 @@ export function usePosts() {
       category: data.category,
       title: data.title,
       tags: overlay[form.id].tags,
-      image: overlay[form.id].image
+      image: overlay[form.id].image,
+      placeContentId: data.place_content_id,
+      placeTitle: data.place_title,
+      placeContentTypeId: data.place_content_type_id
     })
   }
 
@@ -199,6 +221,8 @@ export function usePosts() {
     filteredPosts,
     isLoading,
     loadError,
+    placeFilter,
+    setPlaceFilter,
     loadPosts,
     fetchPostDetail,
     createPost,
