@@ -16,11 +16,18 @@ const exploreCategory = ref('관광지')
 const exploreTag = ref('')
 
 const { fetchLiveWeather } = useWeather()
-const { requestedTab, consumeRequestedTab } = useAppNavigation()
+const { requestedTab, consumeRequestedTab, pushBack } = useAppNavigation()
+
+const changeTab = (tab) => {
+  if (tab === currentTab.value) return
+  const prevTab = currentTab.value
+  pushBack(() => { currentTab.value = prevTab })
+  currentTab.value = tab
+}
 
 watch(requestedTab, (tab) => {
   if (tab) {
-    currentTab.value = tab
+    changeTab(tab)
     consumeRequestedTab()
   }
 })
@@ -44,15 +51,14 @@ const openExploreTag = (tag) => {
 
 <template>
   <div class="min-h-screen flex flex-col relative">
-    <NavBar v-model:current-tab="currentTab" />
+    <NavBar :current-tab="currentTab" @update:current-tab="changeTab" />
 
     <main class="flex-grow">
       <HomeView
         v-if="currentTab === 'home'"
-        @go-community="currentTab = 'community'"
-        @open-calendar="currentTab = 'festivals'"
-        @open-explore="openExplore"
-        @open-explore-tag="openExploreTag"
+        @go-community="changeTab('community')"
+        @open-calendar="changeTab('festivals')"
+        @open-location="changeTab('explore')"
       />
       <CommunityView v-else-if="currentTab === 'community'" />
       <ExploreView v-else-if="currentTab === 'explore'" :initial-category="exploreCategory" :initial-tag="exploreTag" />

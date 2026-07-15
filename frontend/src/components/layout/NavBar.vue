@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useWeather } from '../../composables/useWeather'
+import { useAppNavigation } from '../../composables/useAppNavigation'
 
 const props = defineProps({
   currentTab: { type: String, required: true }
@@ -8,6 +9,7 @@ const props = defineProps({
 const emit = defineEmits(['update:currentTab'])
 
 const { weatherData, toggleWeatherDetail } = useWeather()
+const { canGoBack, goBack } = useAppNavigation()
 
 const isMobileMenuOpen = ref(false)
 
@@ -21,15 +23,26 @@ const setTab = (tab) => {
   <nav class="bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
-        <button @click="setTab('home')" class="flex items-center gap-3">
-          <div class="bg-gradient-to-tr from-blue-600 to-sky-500 p-2.5 rounded-xl text-white shadow-md shadow-blue-500/20">
-            <i class="fa-solid fa-map-location-dot text-lg"></i>
-          </div>
-          <div>
-            <span class="text-xl font-black tracking-tight text-slate-900">Local<span class="text-blue-600">Hub</span></span>
-            <span class="ml-1 text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-bold">SEOUL</span>
-          </div>
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            v-if="canGoBack"
+            @click="goBack"
+            title="뒤로가기"
+            class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition shrink-0"
+          >
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+
+          <button @click="setTab('home')" class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-blue-600 to-sky-500 p-2.5 rounded-xl text-white shadow-md shadow-blue-500/20">
+              <i class="fa-solid fa-map-location-dot text-lg"></i>
+            </div>
+            <div>
+              <span class="text-xl font-black tracking-tight text-slate-900">Local<span class="text-blue-600">Hub</span></span>
+              <span class="ml-1 text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-bold">SEOUL</span>
+            </div>
+          </button>
+        </div>
 
         <div class="hidden md:flex space-x-1 bg-slate-100 p-1 rounded-xl">
           <button

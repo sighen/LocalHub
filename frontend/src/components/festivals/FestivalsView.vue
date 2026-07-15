@@ -24,14 +24,17 @@ const {
   fetchFestivalDetail
 } = useFestivals()
 
-const { consumePlaceIntent } = useAppNavigation()
+const { consumePlaceIntent, pushBack, popBack } = useAppNavigation()
 
 const selectedContentId = ref(null)
 const detailPlace = ref(null)
 const isDetailLoading = ref(false)
 const detailLoadError = ref(false)
+let detailBackId = null
 
 const openDetail = async (contentId) => {
+  const openingFromList = selectedContentId.value === null
+  if (openingFromList) detailBackId = pushBack(() => closeDetail())
   selectedContentId.value = contentId
   isDetailLoading.value = true
   detailLoadError.value = false
@@ -54,6 +57,10 @@ const retryDetail = () => {
 const closeDetail = () => {
   selectedContentId.value = null
   detailPlace.value = null
+  if (detailBackId !== null) {
+    popBack(detailBackId)
+    detailBackId = null
+  }
 }
 
 const retryList = () => {
