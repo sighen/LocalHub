@@ -5,7 +5,8 @@ const props = defineProps({
   filterBookmarkedOnly: { type: Boolean, required: true },
   searchQuery: { type: String, required: true },
   isLoading: { type: Boolean, default: false },
-  loadError: { type: Boolean, default: false }
+  loadError: { type: Boolean, default: false },
+  placeFilterTitle: { type: String, default: '' }
 })
 
 const emit = defineEmits([
@@ -16,7 +17,9 @@ const emit = defineEmits([
   'open-read',
   'like-post',
   'toggle-bookmark',
-  'retry'
+  'retry',
+  'clear-place-filter',
+  'go-to-place'
 ])
 </script>
 
@@ -30,6 +33,11 @@ const emit = defineEmits([
       <button @click="emit('open-create')" class="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-500/10 transition flex items-center gap-2">
         <i class="fa-solid fa-pen"></i> 글쓰기 등록
       </button>
+    </div>
+
+    <div v-if="placeFilterTitle" class="flex items-center justify-between gap-2 px-4 py-3 bg-blue-50 border border-blue-100 rounded-2xl text-xs">
+      <span class="font-bold text-blue-700"><i class="fa-solid fa-location-dot mr-1"></i>'{{ placeFilterTitle }}' 관련 후기만 보는 중</span>
+      <button @click="emit('clear-place-filter')" class="font-bold text-blue-500 hover:text-blue-700">전체 보기 <i class="fa-solid fa-xmark ml-0.5"></i></button>
     </div>
 
     <div class="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
@@ -106,7 +114,14 @@ const emit = defineEmits([
               <span class="text-slate-400">{{ post.date }}</span>
             </div>
             <h3 class="text-base font-black text-slate-800 leading-snug hover:text-blue-600 transition truncate">{{ post.title }}</h3>
-            <div class="flex gap-1 flex-wrap">
+            <div class="flex gap-1 flex-wrap items-center">
+              <button
+                v-if="post.placeContentId"
+                @click.stop="emit('go-to-place', { contentId: post.placeContentId, contentTypeId: post.placeContentTypeId })"
+                class="text-[10px] bg-emerald-50 text-emerald-600 font-extrabold px-2 py-0.5 rounded hover:bg-emerald-100 transition"
+              >
+                <i class="fa-solid fa-location-dot mr-0.5"></i>{{ post.placeTitle }}
+              </button>
               <span v-for="tag in post.tags" :key="tag" class="text-[10px] bg-slate-100 text-slate-500 font-extrabold px-2 py-0.5 rounded">#{{ tag }}</span>
             </div>
           </div>

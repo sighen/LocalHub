@@ -1,12 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useFestivals } from '../../composables/useFestivals'
-import { usePosts } from '../../composables/usePosts'
-import { useToast } from '../../composables/useToast'
+import { useAppNavigation } from '../../composables/useAppNavigation'
 import FestivalCalendar from './FestivalCalendar.vue'
 import FestivalList from './FestivalList.vue'
 import FestivalDetailModal from './FestivalDetailModal.vue'
-import PostReadModal from '../community/PostReadModal.vue'
 
 const {
   year,
@@ -23,21 +21,15 @@ const {
   loadFacets,
   goToMonth,
   selectDistrict,
-  fetchFestivalDetail,
-  fetchRelatedPosts
+  fetchFestivalDetail
 } = useFestivals()
 
-const { fetchPostDetail, likePost, toggleBookmark } = usePosts()
-const { showToast } = useToast()
+const { consumePlaceIntent } = useAppNavigation()
 
 const selectedContentId = ref(null)
 const detailPlace = ref(null)
-const relatedPosts = ref([])
 const isDetailLoading = ref(false)
 const detailLoadError = ref(false)
-
-const selectedPost = ref(null)
-const isPostModalOpen = ref(false)
 
 const openDetail = async (contentId) => {
   selectedContentId.value = contentId
@@ -50,7 +42,6 @@ const openDetail = async (contentId) => {
       return
     }
     detailPlace.value = place
-    relatedPosts.value = await fetchRelatedPosts(place.title)
   } finally {
     isDetailLoading.value = false
   }
@@ -63,31 +54,19 @@ const retryDetail = () => {
 const closeDetail = () => {
   selectedContentId.value = null
   detailPlace.value = null
-  relatedPosts.value = []
-}
-
-const openPost = async (postId) => {
-  const post = await fetchPostDetail(postId)
-  if (!post) {
-    showToast('게시글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.')
-    return
-  }
-  selectedPost.value = post
-  isPostModalOpen.value = true
-}
-
-const closePost = () => {
-  isPostModalOpen.value = false
-  selectedPost.value = null
 }
 
 const retryList = () => {
   loadFestivals()
 }
 
-onMounted(() => {
-  loadFacets()
-  loadFestivals()
+onMounted(async () => {
+  await Promise.all([loadFacets(), loadFestivals()])
+
+  const intent = consumePlaceIntent()
+  if (intent?.contentTypeId === 15) {
+    openDetail(intent.contentId)
+  }
 })
 </script>
 
@@ -166,21 +145,10 @@ onMounted(() => {
     <FestivalDetailModal
       v-if="selectedContentId"
       :place="detailPlace"
-      :related-posts="relatedPosts"
       :is-loading="isDetailLoading"
       :load-error="detailLoadError"
       @close="closeDetail"
       @retry="retryDetail"
-      @open-post="openPost"
-    />
-
-    <PostReadModal
-      v-if="isPostModalOpen"
-      :post="selectedPost"
-      read-only
-      @close="closePost"
-      @like="likePost"
-      @toggle-bookmark="toggleBookmark"
     />
   </div>
 </template>

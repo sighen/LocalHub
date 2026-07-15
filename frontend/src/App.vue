@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import NavBar from './components/layout/NavBar.vue'
 import FooterBar from './components/layout/FooterBar.vue'
 import HomeView from './components/home/HomeView.vue'
@@ -9,12 +9,21 @@ import FestivalsView from './components/festivals/FestivalsView.vue'
 import ToastAlert from './components/modals/ToastAlert.vue'
 import ChatWidget from './components/chat/ChatWidget.vue'
 import { useWeather } from './composables/useWeather'
+import { useAppNavigation } from './composables/useAppNavigation'
 
 const currentTab = ref('home')
 const exploreCategory = ref('관광지')
 const exploreTag = ref('')
 
 const { fetchLiveWeather } = useWeather()
+const { requestedTab, consumeRequestedTab } = useAppNavigation()
+
+watch(requestedTab, (tab) => {
+  if (tab) {
+    currentTab.value = tab
+    consumeRequestedTab()
+  }
+})
 
 onMounted(() => {
   fetchLiveWeather()
