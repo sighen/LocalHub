@@ -15,13 +15,18 @@ const setTab = (tab) => {
   emit('update:currentTab', tab)
   isMobileMenuOpen.value = false
 }
+
+const goHome = () => {
+  setTab('home')
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 </script>
 
 <template>
   <nav class="bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
-        <button @click="setTab('home')" class="flex items-center gap-3">
+        <button @click="goHome" class="flex items-center gap-3">
           <div class="bg-gradient-to-tr from-blue-600 to-sky-500 p-2.5 rounded-xl text-white shadow-md shadow-blue-500/20">
             <i class="fa-solid fa-map-location-dot text-lg"></i>
           </div>
