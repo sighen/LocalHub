@@ -11,6 +11,7 @@ from app.routers import (
     locations,
     places,
     posts,
+    weather,
 )
 
 Base.metadata.create_all(bind=engine)
@@ -38,6 +39,7 @@ app.include_router(
 )
 app.include_router(leports.router, prefix="/api/leports", tags=["leports"])
 app.include_router(places.router, prefix="/api/places", tags=["places"])
+app.include_router(weather.router, prefix="/api/weather", tags=["weather"])
 
 
 @app.get("/")

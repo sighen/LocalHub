@@ -244,3 +244,10 @@ class FestivalDetail(FestivalListItem):
     lat: Optional[float]
     lng: Optional[float]
     images: Optional[List[str]] = None
+
+
+# ---------- Weather ----------
+class WeatherCurrent(BaseModel):
+    temp: float
+    icon: str
+    status: str
