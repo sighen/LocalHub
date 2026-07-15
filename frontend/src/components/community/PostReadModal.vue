@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import client from '../../api/client'
 import { useToast } from '../../composables/useToast'
 import { useAppNavigation } from '../../composables/useAppNavigation'
+import { burstConfetti } from '../../utils/confetti'
 
 const props = defineProps({
   post: { type: Object, required: true },
@@ -136,8 +137,8 @@ onMounted(() => {
 
         <div class="flex items-center justify-between pt-2">
           <div class="flex gap-4 text-xs font-bold text-slate-400">
-            <button @click="emit('like', post.id)" class="hover:text-red-500 transition"><i class="fa-regular fa-heart mr-1"></i> 좋아요 {{ post.likes }}</button>
-            <button @click="emit('toggle-bookmark', post.id)" :class="['transition', post.bookmarked ? 'text-yellow-500' : 'hover:text-yellow-500']">
+            <button @click="(e) => { burstConfetti(e.clientX, e.clientY); emit('like', post.id) }" class="hover:text-red-500 transition"><i class="fa-regular fa-heart mr-1"></i> 좋아요 {{ post.likes }}</button>
+            <button @click="(e) => { burstConfetti(e.clientX, e.clientY); emit('toggle-bookmark', post.id) }" :class="['transition', post.bookmarked ? 'text-yellow-500' : 'hover:text-yellow-500']">
               <i class="fa-regular fa-star"></i> 북마크
             </button>
           </div>

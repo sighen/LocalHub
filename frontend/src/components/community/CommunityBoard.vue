@@ -1,4 +1,6 @@
 <script setup>
+import { burstConfetti } from '../../utils/confetti'
+
 const props = defineProps({
   filteredPosts: { type: Array, required: true },
   boardTagFilter: { type: String, required: true },
@@ -128,9 +130,9 @@ const emit = defineEmits([
 
           <div @click.stop class="flex items-center gap-4 text-xs font-bold text-slate-400 shrink-0 self-end sm:self-center">
             <span><i class="fa-regular fa-eye mr-1"></i> {{ post.views }}</span>
-            <button @click="emit('like-post', post.id)" class="hover:text-red-500 transition"><i class="fa-solid fa-heart mr-1 text-red-400"></i> {{ post.likes }}</button>
+            <button @click="(e) => { burstConfetti(e.clientX, e.clientY); emit('like-post', post.id) }" class="hover:text-red-500 transition"><i class="fa-solid fa-heart mr-1 text-red-400"></i> {{ post.likes }}</button>
             <button
-              @click="emit('toggle-bookmark', post.id)"
+              @click="(e) => { burstConfetti(e.clientX, e.clientY); emit('toggle-bookmark', post.id) }"
               :class="['p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg transition', post.bookmarked ? 'text-yellow-500' : 'text-slate-300']"
             >
               <i class="fa-solid fa-star"></i>

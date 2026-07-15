@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -82,8 +82,14 @@ class CommentItem(BaseModel):
         from_attributes = True
 
 
+class ChatHistoryTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(..., max_length=1000)
+
+
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=500)
+    history: List[ChatHistoryTurn] = Field(default_factory=list, max_length=12)
 
     @field_validator("message")
     @classmethod
@@ -103,16 +109,6 @@ class ChatSearchCondition(BaseModel):
     limit: int = Field(default=5, ge=1, le=5)
 
 
-class AIRecommendation(BaseModel):
-    content_id: str
-    reason: str
-
-
-class AIFinalAnswer(BaseModel):
-    answer: str
-    recommendations: List[AIRecommendation] = Field(default_factory=list)
-
-
 class ChatPlace(BaseModel):
     content_id: str
     content_type_id: int
@@ -126,11 +122,6 @@ class ChatPlace(BaseModel):
     event_start_date: Optional[str] = None
     event_end_date: Optional[str] = None
     reason: str
-
-
-class ChatResponse(BaseModel):
-    answer: str
-    places: List[ChatPlace] = Field(default_factory=list)
 
 
 # ---------- Locations ----------
