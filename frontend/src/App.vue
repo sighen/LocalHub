@@ -20,7 +20,12 @@ const { fetchLiveWeather } = useWeather()
 const currentTab = computed(() => (TABS.includes(segments.value[0]) ? segments.value[0] : 'home'))
 
 const changeTab = (tab) => {
+  const isSameTab = tab === currentTab.value
   navigate(tab === 'home' ? '/' : `/${tab}`)
+  // 다른 섹션으로 실제로 이동할 때는 이전 화면의 스크롤 위치가 그대로 남아있지
+  // 않도록 맨 위로 되돌린다. 같은 탭을 다시 누른 경우(예: 홈에서 로고 클릭)는
+  // 건드리지 않아서, 그 경우에 쓰이는 부드러운 스크롤 애니메이션과 겹치지 않는다.
+  if (!isSameTab) window.scrollTo(0, 0)
 }
 
 const exploreCategory = ref('관광지')
