@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useFestivals } from '../../composables/useFestivals'
-import { useAppNavigation } from '../../composables/useAppNavigation'
+import { useRouter } from '../../composables/useRouter'
 import FestivalCalendar from './FestivalCalendar.vue'
 import FestivalList from './FestivalList.vue'
 import FestivalDetailModal from './FestivalDetailModal.vue'
@@ -24,17 +24,18 @@ const {
   fetchFestivalDetail
 } = useFestivals()
 
-const { consumePlaceIntent, pushBack, popBack } = useAppNavigation()
+const { segments, navigate } = useRouter()
+
+// URL이 /festivals/:id면 상세, /festivals면 목록. 브라우저 뒤로/앞으로가기로
+// segments가 바뀌면 이 감시자가 상세를 열고/닫는다.
+const detailId = computed(() => (segments.value[0] === 'festivals' ? segments.value[1] || null : null))
 
 const selectedContentId = ref(null)
 const detailPlace = ref(null)
 const isDetailLoading = ref(false)
 const detailLoadError = ref(false)
-let detailBackId = null
 
-const openDetail = async (contentId) => {
-  const openingFromList = selectedContentId.value === null
-  if (openingFromList) detailBackId = pushBack(() => closeDetail())
+const loadDetail = async (contentId) => {
   selectedContentId.value = contentId
   isDetailLoading.value = true
   detailLoadError.value = false
@@ -50,17 +51,25 @@ const openDetail = async (contentId) => {
   }
 }
 
+watch(detailId, (id) => {
+  if (id) {
+    loadDetail(id)
+  } else {
+    selectedContentId.value = null
+    detailPlace.value = null
+  }
+})
+
 const retryDetail = () => {
-  if (selectedContentId.value) openDetail(selectedContentId.value)
+  if (detailId.value) loadDetail(detailId.value)
+}
+
+const openDetail = (contentId) => {
+  navigate(`/festivals/${contentId}`)
 }
 
 const closeDetail = () => {
-  selectedContentId.value = null
-  detailPlace.value = null
-  if (detailBackId !== null) {
-    popBack(detailBackId)
-    detailBackId = null
-  }
+  navigate('/festivals')
 }
 
 const retryList = () => {
@@ -70,10 +79,7 @@ const retryList = () => {
 onMounted(async () => {
   await Promise.all([loadFacets(), loadFestivals()])
 
-  const intent = consumePlaceIntent()
-  if (intent?.contentTypeId === 15) {
-    openDetail(intent.contentId)
-  }
+  if (detailId.value) loadDetail(detailId.value)
 })
 </script>
 
