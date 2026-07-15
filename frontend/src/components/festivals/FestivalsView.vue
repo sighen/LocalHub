@@ -12,6 +12,7 @@ const {
   monthLabel,
   selectedDate,
   district,
+  keyword,
   viewMode,
   festivals,
   facets,
@@ -25,6 +26,12 @@ const {
 } = useFestivals()
 
 const { segments, navigate, goBack } = useRouter()
+
+let keywordDebounceId = null
+watch(keyword, () => {
+  clearTimeout(keywordDebounceId)
+  keywordDebounceId = setTimeout(() => loadFestivals(), 300)
+})
 
 // URL이 /festivals/:id면 상세, /festivals면 목록. 브라우저 뒤로/앞으로가기로
 // segments가 바뀌면 이 감시자가 상세를 열고/닫는다.
@@ -89,6 +96,16 @@ onMounted(async () => {
       <div>
         <h2 class="text-3xl font-black text-slate-900 tracking-tight">축제 · 공연 · 행사</h2>
         <p class="text-sm text-slate-500 mt-1">서울시 공공데이터 기반으로 진행 중이거나 예정된 축제·행사를 찾아보세요.</p>
+      </div>
+
+      <div class="relative shrink-0">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+        <input
+          type="text"
+          v-model="keyword"
+          placeholder="축제·행사명으로 검색"
+          class="pl-8 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-56"
+        />
       </div>
     </div>
 

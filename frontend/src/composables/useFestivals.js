@@ -23,6 +23,7 @@ export function useFestivals() {
   const selectedDate = ref(`${year.value}-${pad2(month.value)}-${pad2(today.getDate())}`)
 
   const district = ref('')
+  const keyword = ref('')
   const viewMode = ref('calendar')
 
   const festivals = ref([])
@@ -48,6 +49,7 @@ export function useFestivals() {
         params: {
           date: `${year.value}-${pad2(month.value)}`,
           district: district.value || undefined,
+          q: keyword.value || undefined,
           size: 100
         }
       })
@@ -105,6 +107,7 @@ export function useFestivals() {
     monthLabel,
     selectedDate,
     district,
+    keyword,
     viewMode,
     festivals,
     facets,
