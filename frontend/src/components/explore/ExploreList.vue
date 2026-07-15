@@ -1,5 +1,6 @@
 <script setup>
 import { tagLabel } from '../../utils/tagLabels'
+import { secureImageUrl } from '../../utils/imageUrl'
 
 const props = defineProps({
   places: { type: Array, required: true },
@@ -45,7 +46,7 @@ const totalPages = () => Math.max(1, Math.ceil(props.total / props.pageSize))
           <div class="h-40 bg-slate-100 overflow-hidden relative">
             <img
               v-if="place.thumbnail_url || place.image_url"
-              :src="place.thumbnail_url || place.image_url"
+              :src="secureImageUrl(place.thumbnail_url || place.image_url)"
               :alt="place.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
             />

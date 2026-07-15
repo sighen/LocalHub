@@ -14,8 +14,11 @@ const {
 </script>
 
 <template>
-  <div class="fixed bottom-6 left-6 z-[9990] flex flex-col items-start gap-3">
-    <div v-if="isChatOpen" class="w-[360px] h-[480px] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-fade-in">
+  <div class="fixed bottom-6 right-6 z-[9990] flex flex-col items-end gap-3">
+    <div
+      v-if="isChatOpen"
+      class="fixed inset-0 z-[9995] w-full h-full bg-white flex flex-col overflow-hidden animate-fade-in sm:static sm:inset-auto sm:z-auto sm:w-[360px] sm:h-[480px] sm:rounded-3xl sm:shadow-2xl sm:border sm:border-slate-100"
+    >
       <div class="bg-gradient-to-tr from-slate-900 to-indigo-900 text-white p-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 bg-indigo-500/20 text-indigo-300 rounded-xl flex items-center justify-center text-lg animate-pulse">
@@ -54,7 +57,7 @@ const {
       </form>
     </div>
 
-    <button @click="isChatOpen = !isChatOpen" class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full flex items-center justify-center text-xl shadow-xl shadow-indigo-500/20 transition duration-300 transform hover:scale-105">
+    <button v-else @click="isChatOpen = true" class="relative w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full flex items-center justify-center text-xl shadow-xl shadow-indigo-500/20 transition duration-300 transform hover:scale-105">
       <i class="fa-solid fa-comments"></i>
       <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-bounce">1</span>
     </button>

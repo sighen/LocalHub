@@ -30,30 +30,26 @@ export const upcomingEvents = [
   { id: 105, title: '여름식탁 : 여섯 개의 손, 하나의 식탁', category: '전시/공연', dateStr: '07.01 ~ 09.12', dateSpan: ['2026-07-14', '2026-07-17', '2026-07-21', '2026-07-27'], img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&h=400&q=80' }
 ]
 
-export const exploreSpots = [
-  { id: 1, title: '우이동 계곡', desc: '서울 근교에서 시원하고 우아하게 즐기는 여름 힐링 계곡 물소리 코스', lat: 37.6628, lng: 127.0125, img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=400&h=300&q=80' },
-  { id: 2, title: '양화 한강공원 수영장', desc: '시원한 강바람과 시야를 사로잡는 마포대교 아래 무더위 날리기 프로젝트 수영장', lat: 37.5385, lng: 126.8998, img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=400&h=300&q=80' },
-  { id: 3, title: '한강 버스', desc: '한강의 새로운 물길을 헤치며 잠실에서 여의도까지 풍경을 담는 서울 새 물결 대중교통', lat: 37.5255, lng: 126.9248, img: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=400&h=300&q=80' },
-  { id: 4, title: 'e-스포츠 펍·카페 가이드', desc: '세계에서 가장 핫한 게이머들과 시원한 맥주 한 잔 마시며 LCK 빅매치를 중계하는 아지트', lat: 37.5704, lng: 126.9822, img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&h=300&q=80' }
-]
-
-export const editorCourses = [
-  { title: '비밀스럽고 시원한 여름 창경궁 야간 특별 관람 투어', desc: '고풍스러운 연못인 춘당지의 물그림자와 홍화문의 은은한 빛을 따라가며 한여름 무더위를 날리는 한적한 야간 힐링 데이트 코스입니다.', duration: '2시간 30분', transport: '도보 산책', location: '창경궁 춘당지 전경', img: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=800&h=400&q=80' },
-  { title: '북촌 한옥 북카페에서 즐기는 고즈넉한 사색과 차 한잔', desc: '삼청동 안쪽 기와 지붕 아래 고풍스러운 한옥 인테리어 속에서 에어컨 바람 아래 옛 도서를 탐독하며 은은한 쌍화차를 즐기는 여름 코스입니다.', duration: '3시간', transport: '마을버스 및 도보', location: '북촌 기와길 정취', img: 'https://images.unsplash.com/photo-1601918774946-25832a4be0d6?auto=format&fit=crop&w=800&h=400&q=80' }
+export const exploreCategories = [
+  { id: 1, code: 'EX', title: '체험', desc: '땀 흘린 만큼 짜릿한 서울의 이색 액티비티 체험 코스', img: 'https://images.unsplash.com/photo-1480480565647-1c4385c7c0bf?auto=format&fit=crop&w=400&h=300&q=80' },
+  { id: 2, code: 'HS', title: '역사·인문', desc: '고궁과 옛 골목 그늘을 거니는 고즈넉한 역사·인문 산책', img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=400&h=300&q=80' },
+  { id: 3, code: 'NA', title: '자연', desc: '도심 속 초록 그늘과 청량한 물소리를 따라가는 힐링 자연 코스', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=400&h=300&q=80' },
+  { id: 4, code: 'VE', title: '여가·공원/거리', desc: '한강 바람과 거리 활기를 함께 즐기는 여가·공원 나들이 코스', img: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=400&h=300&q=80' }
 ]
 
 export const travelInfoLinks = [
-  { id: 1, title: '지도 및 가이드북', icon: 'fa-solid fa-map' },
-  { id: 2, title: '관광 고궁 예약', icon: 'fa-solid fa-landmark' },
-  { id: 3, title: '도보관광 신청', icon: 'fa-solid fa-person-walking' },
-  { id: 4, title: '관광안내소 정보', icon: 'fa-solid fa-circle-info' },
-  { id: 5, title: '서울 관광안전 요령', icon: 'fa-solid fa-shield-halved' }
+  { id: 1, title: '관광지 정보', icon: 'fa-solid fa-map-location-dot', type: 'explore', category: '관광지' },
+  { id: 2, title: '문화시설 안내', icon: 'fa-solid fa-landmark', type: 'explore', category: '문화시설' },
+  { id: 3, title: '레포츠 체험', icon: 'fa-solid fa-person-swimming', type: 'explore', category: '레포츠' },
+  { id: 4, title: '축제·행사 캘린더', icon: 'fa-solid fa-calendar-days', type: 'festivals' },
+  { id: 5, title: '커뮤니티 여행 후기', icon: 'fa-solid fa-comments', type: 'community' },
+  { id: 6, title: '실시간 날씨 정보', icon: 'fa-solid fa-cloud-sun', type: 'weather' }
 ]
 
 export const snsFeeds = [
-  { id: 1, title: '스님 앞에서 댄스 배틀? 템플스테이 대격돌', img: 'https://images.unsplash.com/photo-1545128485-c400e7702796?auto=format&fit=crop&w=400&h=250&q=80' },
-  { id: 2, title: '육아의 무게를 잠시 내려놓고 떠나는 정릉 힐링 숲길', img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=400&h=250&q=80' },
-  { id: 3, title: '리얼 커플들의 힙지로 노포 삼겹살 데이트 맛집 투어', img: 'https://images.unsplash.com/photo-1502301197179-65228ab57f78?auto=format&fit=crop&w=400&h=250&q=80' }
+  { id: 1, videoId: 'CFU5vgdHgfs', title: '종로 뚜벅이 2박3일 코스, 후회 없이 즐기는 맛집·카페·볼거리｜서울여행 서울데이트 (영어더빙 선택가능)', channel: '너도 가봤으면 해', img: 'https://i.ytimg.com/vi/CFU5vgdHgfs/hqdefault.jpg' },
+  { id: 2, videoId: 'e7lZJ8-rYo0', title: '이색 서울여행 직접 체험하는 기자 (레전드 방송사고) | 서울관광재단XBDNS', channel: '서울관광재단', img: 'https://i.ytimg.com/vi/e7lZJ8-rYo0/hqdefault.jpg' },
+  { id: 3, videoId: 'ig5w8cd6T20', title: '🫢 서울 살아도 잘 모르는 가볼만한 곳 10! 휴일에 혼자 걷기 정말 좋아요! | 대중교통 트레킹 여행', channel: '트레킹 코리아', img: 'https://i.ytimg.com/vi/ig5w8cd6T20/hqdefault.jpg' }
 ]
 
 export const defaultPosts = [
