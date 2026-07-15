@@ -42,7 +42,7 @@ onUnmounted(() => clearInterval(autoSlideTimer))
 <template>
   <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
     <div class="text-center space-y-2">
-      <span class="text-xs font-extrabold text-blue-600 uppercase tracking-widest">네티즌서울에서 추천하는 이색적인 여정</span>
+      <span class="text-xs font-extrabold text-blue-600 uppercase tracking-widest">네티즌이 서울에서 추천하는 이색적인 여정</span>
       <h2 class="text-3xl font-black text-slate-900 tracking-tight">인기 커뮤니티 후기</h2>
     </div>
 

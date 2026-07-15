@@ -7,7 +7,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:currentTab'])
 
-const { weatherData, toggleWeatherDetail } = useWeather()
+const { weatherData } = useWeather()
 
 const isMobileMenuOpen = ref(false)
 
@@ -60,7 +60,7 @@ const setTab = (tab) => {
 
         <div class="flex items-center gap-4">
           <div
-            @click="toggleWeatherDetail"
+            @click="setTab('weatherDetail')"
             class="cursor-pointer flex items-center gap-2 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 rounded-xl text-sky-700 text-xs font-bold border border-sky-100 transition"
           >
             <span>{{ weatherData.icon }}</span>

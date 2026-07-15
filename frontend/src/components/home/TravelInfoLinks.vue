@@ -1,16 +1,13 @@
 <script setup>
 import { travelInfoLinks } from '../../data/mockData'
-import { useWeather } from '../../composables/useWeather'
 
-const emit = defineEmits(['go-community', 'open-calendar', 'open-explore'])
-
-const { toggleWeatherDetail } = useWeather()
+const emit = defineEmits(['go-community', 'open-calendar', 'open-explore', 'open-weather-detail'])
 
 const handleInfoClick = (info) => {
   if (info.type === 'explore') emit('open-explore', info.category)
   else if (info.type === 'festivals') emit('open-calendar')
   else if (info.type === 'community') emit('go-community')
-  else if (info.type === 'weather') toggleWeatherDetail()
+  else if (info.type === 'weather') emit('open-weather-detail')
 }
 </script>
 

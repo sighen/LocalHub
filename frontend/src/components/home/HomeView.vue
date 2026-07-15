@@ -6,7 +6,7 @@ import CommunityHighlights from './CommunityHighlights.vue'
 import TravelInfoLinks from './TravelInfoLinks.vue'
 import SnsFeeds from './SnsFeeds.vue'
 
-const emit = defineEmits(['go-community', 'open-calendar', 'open-explore', 'open-explore-tag'])
+const emit = defineEmits(['go-community', 'open-calendar', 'open-explore', 'open-explore-tag', 'open-weather-detail'])
 
 const scrollToSection = (id) => {
   const el = document.getElementById(id)
@@ -24,6 +24,7 @@ const scrollToSection = (id) => {
       @go-community="emit('go-community')"
       @open-calendar="emit('open-calendar')"
       @open-explore="(category) => emit('open-explore', category)"
+      @open-weather-detail="emit('open-weather-detail')"
     />
     <SnsFeeds />
   </div>
