@@ -24,7 +24,7 @@ const {
   fetchFestivalDetail
 } = useFestivals()
 
-const { segments, navigate } = useRouter()
+const { segments, navigate, goBack } = useRouter()
 
 // URL이 /festivals/:id면 상세, /festivals면 목록. 브라우저 뒤로/앞으로가기로
 // segments가 바뀌면 이 감시자가 상세를 열고/닫는다.
@@ -69,7 +69,7 @@ const openDetail = (contentId) => {
 }
 
 const closeDetail = () => {
-  navigate('/festivals')
+  goBack()
 }
 
 const retryList = () => {

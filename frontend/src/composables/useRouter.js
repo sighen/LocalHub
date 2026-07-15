@@ -30,5 +30,12 @@ export function useRouter() {
     state.value = parseLocation()
   }
 
-  return { path, query, segments, navigate }
+  // 실제 브라우저 뒤로가기와 동일하게 동작한다. "목록으로"/닫기 버튼처럼
+  // 상세뷰를 벗어나는 동작에 쓰면, 다른 탭(예: 커뮤니티)에서 진입했을 때도
+  // 항상 그 탭의 목록으로 되돌아가는 게 아니라 실제로 왔던 곳으로 돌아간다.
+  const goBack = () => {
+    window.history.back()
+  }
+
+  return { path, query, segments, navigate, goBack }
 }
