@@ -4,6 +4,7 @@ import ExploreMap from '../explore/ExploreMap.vue'
 import client from '../../api/client'
 import { formatEventPeriod } from '../../composables/useFestivals'
 import { useAppNavigation } from '../../composables/useAppNavigation'
+import { secureImageUrl } from '../../utils/imageUrl'
 
 const props = defineProps({
   place: { type: Object, default: null },
@@ -31,6 +32,7 @@ watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediat
 </script>
 
 <template>
+  <Teleport to="body">
   <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
@@ -52,7 +54,7 @@ watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediat
 
         <template v-else>
           <div v-if="place.image_url" class="h-48 rounded-xl overflow-hidden border border-slate-200">
-            <img :src="place.image_url" :alt="place.title" class="w-full h-full object-cover" />
+            <img :src="secureImageUrl(place.image_url)" :alt="place.title" class="w-full h-full object-cover" />
           </div>
 
           <div class="space-y-1.5">
@@ -90,4 +92,5 @@ watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediat
       </div>
     </div>
   </div>
+  </Teleport>
 </template>

@@ -5,6 +5,7 @@ import client from '../../api/client'
 import { useWeather } from '../../composables/useWeather'
 import { useAppNavigation } from '../../composables/useAppNavigation'
 import { tagLabel } from '../../utils/tagLabels'
+import { secureImageUrl } from '../../utils/imageUrl'
 
 const props = defineProps({
   place: { type: Object, default: null },
@@ -53,7 +54,7 @@ watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediat
     <template v-else>
       <div class="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
         <div v-if="place.image_url" class="h-64 bg-slate-100 overflow-hidden">
-          <img :src="place.image_url" :alt="place.title" class="w-full h-full object-cover" />
+          <img :src="secureImageUrl(place.image_url)" :alt="place.title" class="w-full h-full object-cover" />
         </div>
 
         <div class="p-6 space-y-4">

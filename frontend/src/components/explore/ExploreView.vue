@@ -3,9 +3,15 @@ import { ref, onMounted } from 'vue'
 import { useLocations } from '../../composables/useLocations'
 import { useAppNavigation } from '../../composables/useAppNavigation'
 import ExploreFilters from './ExploreFilters.vue'
+import ExploreDistrictMap from './ExploreDistrictMap.vue'
 import ExploreList from './ExploreList.vue'
 import ExploreMap from './ExploreMap.vue'
 import ExploreDetail from './ExploreDetail.vue'
+
+const props = defineProps({
+  initialCategory: { type: String, default: '관광지' },
+  initialTag: { type: String, default: '' }
+})
 
 const {
   activeCategory,
@@ -159,17 +165,17 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6 items-start">
-        <ExploreFilters
-          :districts="districts"
-          :tag="tag"
-          :sort="sort"
-          :facets="facets"
-          @toggle-district="toggleDistrict"
-          @clear-districts="clearDistricts"
-          @select-tag="onSelectTag"
-          @select-sort="onSelectSort"
-        />
+      <div class="grid grid-cols-1 lg:grid-cols-[440px_1fr] gap-6 items-start">
+        <div class="space-y-4">
+          <ExploreDistrictMap :districts="districts" @toggle-district="toggleDistrict" @clear-districts="clearDistricts" />
+          <ExploreFilters
+            :tag="tag"
+            :sort="sort"
+            :facets="facets"
+            @select-tag="onSelectTag"
+            @select-sort="onSelectSort"
+          />
+        </div>
 
         <div v-if="viewMode === 'map'">
           <div v-if="isMapLoading" class="p-16 text-center text-slate-400 space-y-2">
