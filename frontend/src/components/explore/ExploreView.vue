@@ -41,7 +41,7 @@ const {
   fetchNearby
 } = useLocations()
 
-const { segments, query, navigate } = useRouter()
+const { segments, query, navigate, goBack } = useRouter()
 
 const CATEGORIES = ['관광지', '문화시설', '레포츠']
 
@@ -91,7 +91,7 @@ const openDetail = (contentId) => {
 }
 
 const backToList = () => {
-  navigate('/explore')
+  goBack()
 }
 
 const onSelectTag = (value) => {

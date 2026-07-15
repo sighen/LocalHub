@@ -94,6 +94,24 @@ const openReadPostModal = (post) => {
   navigate(`/community/post/${post.id}${qs.value}`)
 }
 
+// likePost/toggleBookmark는 목록(posts 배열)만 갱신한다. 읽기 모달은
+// currentActivePost라는 별도 스냅샷을 보여주고 있어서, 모달을 열어둔 채
+// 좋아요/북마크를 누르면 목록은 바뀌어도 모달 화면엔 반영되지 않는다.
+// 여기서 currentActivePost도 함께 갱신해서 바로 눈에 보이게 한다.
+const handleLikeFromModal = (id) => {
+  likePost(id)
+  if (currentActivePost.value.id === id) {
+    currentActivePost.value = { ...currentActivePost.value, likes: currentActivePost.value.likes + 1 }
+  }
+}
+
+const handleToggleBookmarkFromModal = (id) => {
+  toggleBookmark(id)
+  if (currentActivePost.value.id === id) {
+    currentActivePost.value = { ...currentActivePost.value, bookmarked: !currentActivePost.value.bookmarked }
+  }
+}
+
 const savePostForm = async () => {
   writeError.value = ''
   try {
@@ -231,8 +249,8 @@ watch(placeFilterId, (id) => {
       v-if="isReadModalOpen"
       :post="currentActivePost"
       @close="closeReadModal"
-      @like="likePost"
-      @toggle-bookmark="toggleBookmark"
+      @like="handleLikeFromModal"
+      @toggle-bookmark="handleToggleBookmarkFromModal"
       @edit="triggerAction('edit')"
       @delete="triggerAction('delete')"
     />
