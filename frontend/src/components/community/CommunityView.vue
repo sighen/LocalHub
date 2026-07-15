@@ -90,6 +90,11 @@ const clearPlaceFilter = () => {
   setPlaceFilter(null)
 }
 
+const clearPlaceFilter = () => {
+  placeFilterTitle.value = ''
+  setPlaceFilter(null)
+}
+
 const openReadPostModal = async (post) => {
   const detail = await fetchPostDetail(post.id)
   if (!detail) {

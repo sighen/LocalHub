@@ -4,6 +4,7 @@ import ExploreMap from '../explore/ExploreMap.vue'
 import client from '../../api/client'
 import { formatEventPeriod } from '../../composables/useFestivals'
 import { useAppNavigation } from '../../composables/useAppNavigation'
+import { secureImageUrl } from '../../utils/imageUrl'
 
 const props = defineProps({
   place: { type: Object, default: null },
