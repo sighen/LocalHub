@@ -136,7 +136,7 @@ export function useLocations() {
       const { data } = await client.get(`/locations/${contentId}/nearby`)
       return data
     } catch (e) {
-      return { restaurants: [], lodgings: [] }
+      return { festival: null, attraction: null }
     }
   }
 

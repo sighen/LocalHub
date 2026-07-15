@@ -221,8 +221,8 @@ class PlacePoint(BaseModel):
 
 
 class NearbyPlacesResponse(BaseModel):
-    restaurants: List[PlaceItem]
-    lodgings: List[PlaceItem]
+    festival: Optional[PlaceItem] = None
+    attraction: Optional[PlaceItem] = None
 
 
 # ---------- Festivals ----------
