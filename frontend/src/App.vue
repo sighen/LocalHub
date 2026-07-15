@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import NavBar from './components/layout/NavBar.vue'
 import FooterBar from './components/layout/FooterBar.vue'
 import HomeView from './components/home/HomeView.vue'
@@ -9,44 +9,37 @@ import FestivalsView from './components/festivals/FestivalsView.vue'
 import ToastAlert from './components/modals/ToastAlert.vue'
 import ChatWidget from './components/chat/ChatWidget.vue'
 import { useWeather } from './composables/useWeather'
-import { useAppNavigation } from './composables/useAppNavigation'
+import { useRouter } from './composables/useRouter'
 
-const currentTab = ref('home')
-const exploreCategory = ref('관광지')
-const exploreTag = ref('')
+const TABS = ['community', 'explore', 'festivals']
 
+const { segments, navigate } = useRouter()
 const { fetchLiveWeather } = useWeather()
-const { requestedTab, consumeRequestedTab, pushBack } = useAppNavigation()
+
+const currentTab = computed(() => (TABS.includes(segments.value[0]) ? segments.value[0] : 'home'))
 
 const changeTab = (tab) => {
-  if (tab === currentTab.value) return
-  const prevTab = currentTab.value
-  pushBack(() => { currentTab.value = prevTab })
-  currentTab.value = tab
+  navigate(tab === 'home' ? '/' : `/${tab}`)
 }
 
-watch(requestedTab, (tab) => {
-  if (tab) {
-    changeTab(tab)
-    consumeRequestedTab()
-  }
-})
-
-onMounted(() => {
-  fetchLiveWeather()
-})
+const exploreCategory = ref('관광지')
+const exploreTag = ref('')
 
 const openExplore = (category) => {
   exploreCategory.value = category
   exploreTag.value = ''
-  currentTab.value = 'explore'
+  changeTab('explore')
 }
 
 const openExploreTag = (tag) => {
   exploreCategory.value = '관광지'
   exploreTag.value = tag
-  currentTab.value = 'explore'
+  changeTab('explore')
 }
+
+onMounted(() => {
+  fetchLiveWeather()
+})
 </script>
 
 <template>
@@ -58,7 +51,8 @@ const openExploreTag = (tag) => {
         v-if="currentTab === 'home'"
         @go-community="changeTab('community')"
         @open-calendar="changeTab('festivals')"
-        @open-location="changeTab('explore')"
+        @open-explore="openExplore"
+        @open-explore-tag="openExploreTag"
       />
       <CommunityView v-else-if="currentTab === 'community'" />
       <ExploreView v-else-if="currentTab === 'explore'" :initial-category="exploreCategory" :initial-tag="exploreTag" />

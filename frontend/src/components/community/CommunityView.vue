@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePosts } from '../../composables/usePosts'
 import { useToast } from '../../composables/useToast'
 import { useAppNavigation } from '../../composables/useAppNavigation'
+import { useRouter } from '../../composables/useRouter'
 import CommunityBoard from './CommunityBoard.vue'
 import PostReadModal from './PostReadModal.vue'
 import PostWriteModal from './PostWriteModal.vue'
@@ -28,39 +29,29 @@ const {
 } = usePosts()
 
 const { showToast } = useToast()
-const { consumeCommunityIntent, goToPlace, pushBack, popBack } = useAppNavigation()
+const { goToPlace } = useAppNavigation()
+const { segments, query, navigate } = useRouter()
+
+// 현재 쿼리스트링을 유지한 채 목록/작성 경로를 오갈 때 쓰는 헬퍼.
+// (예: ?place=123으로 필터링된 채 글을 읽고 다시 목록으로 돌아와도 필터 유지)
+const qs = computed(() => {
+  const s = query.value.toString()
+  return s ? `?${s}` : ''
+})
+
+// /community/post/:id 면 해당 글 상세, /community/write면 새 글 작성.
+const postId = computed(() => (segments.value[0] === 'community' && segments.value[1] === 'post' ? segments.value[2] || null : null))
+const isWriteRoute = computed(() => segments.value[0] === 'community' && segments.value[1] === 'write')
+const placeFilterId = computed(() => query.value.get('place') || null)
+const placeFilterTitle = computed(() => query.value.get('placeTitle') || '')
 
 const isReadModalOpen = ref(false)
-const isWriteModalOpen = ref(false)
+const isEditingLocally = ref(false)
+const isWriteModalOpen = computed(() => isWriteRoute.value || isEditingLocally.value)
 const isPwModalOpen = ref(false)
 const pwError = ref(false)
 const pwVerifyInput = ref('')
 const writeError = ref('')
-const placeFilterTitle = ref('')
-
-let readModalBackId = null
-let writeModalBackId = null
-
-const closeReadModal = () => {
-  isReadModalOpen.value = false
-  if (readModalBackId !== null) {
-    popBack(readModalBackId)
-    readModalBackId = null
-  }
-}
-
-const showWriteModal = () => {
-  isWriteModalOpen.value = true
-  writeModalBackId = pushBack(() => closeWriteModal())
-}
-
-const closeWriteModal = () => {
-  isWriteModalOpen.value = false
-  if (writeModalBackId !== null) {
-    popBack(writeModalBackId)
-    writeModalBackId = null
-  }
-}
 
 const currentActivePost = ref({})
 const blankPostForm = () => ({
@@ -79,26 +70,28 @@ const postForm = ref(blankPostForm())
 
 let activeAction = ''
 
+const closeReadModal = () => {
+  isReadModalOpen.value = false
+  navigate(`/community${qs.value}`)
+}
+
+const closeWriteModal = () => {
+  isEditingLocally.value = false
+  if (isWriteRoute.value) navigate(`/community${qs.value}`)
+}
+
 const openCreatePostModal = () => {
   postForm.value = blankPostForm()
   writeError.value = ''
-  showWriteModal()
+  navigate(`/community/write${qs.value}`)
 }
 
 const clearPlaceFilter = () => {
-  placeFilterTitle.value = ''
-  setPlaceFilter(null)
+  navigate('/community')
 }
 
-const openReadPostModal = async (post) => {
-  const detail = await fetchPostDetail(post.id)
-  if (!detail) {
-    showToast('게시글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.')
-    return
-  }
-  currentActivePost.value = detail
-  isReadModalOpen.value = true
-  readModalBackId = pushBack(() => closeReadModal())
+const openReadPostModal = (post) => {
+  navigate(`/community/post/${post.id}${qs.value}`)
 }
 
 const savePostForm = async () => {
@@ -158,8 +151,8 @@ const submitPasswordVerification = async () => {
     postForm.value = form
     writeError.value = ''
     isPwModalOpen.value = false
-    closeReadModal()
-    showWriteModal()
+    isReadModalOpen.value = false
+    isEditingLocally.value = true
     return
   }
 
@@ -178,26 +171,41 @@ const submitPasswordVerification = async () => {
   }
 }
 
-onMounted(() => {
-  const intent = consumeCommunityIntent()
-  if (intent?.type === 'write') {
-    postForm.value = {
-      ...blankPostForm(),
-      category: '관광지',
-      placeContentId: intent.placeContentId,
-      placeTitle: intent.placeTitle,
-      placeContentTypeId: intent.placeContentTypeId
-    }
-    writeError.value = ''
-    showWriteModal()
-  } else if (intent?.type === 'view-reviews') {
-    placeFilterTitle.value = intent.placeTitle
-    setPlaceFilter(intent.placeContentId)
+// postId가 바뀌면(다른 글을 열거나, 뒤로가기로 글을 닫거나) 진행 중이던
+// 로컬 수정 오버레이는 더 이상 유효하지 않으므로 정리한다.
+watch(postId, async (id) => {
+  isEditingLocally.value = false
+
+  if (!id) {
+    isReadModalOpen.value = false
     return
   }
 
-  loadPosts()
-})
+  const detail = await fetchPostDetail(id)
+  if (!detail) {
+    showToast('게시글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.')
+    navigate('/community', { replace: true })
+    return
+  }
+  currentActivePost.value = detail
+  isReadModalOpen.value = true
+}, { immediate: true })
+
+watch(isWriteRoute, (isWrite) => {
+  if (!isWrite) return
+  postForm.value = {
+    ...blankPostForm(),
+    category: '관광지',
+    placeContentId: query.value.get('placeId') || null,
+    placeTitle: query.value.get('placeTitle') || '',
+    placeContentTypeId: query.value.get('placeType') ? Number(query.value.get('placeType')) : null
+  }
+  writeError.value = ''
+}, { immediate: true })
+
+watch(placeFilterId, (id) => {
+  setPlaceFilter(id)
+}, { immediate: true })
 </script>
 
 <template>
