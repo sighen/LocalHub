@@ -11,12 +11,26 @@ import ChatWidget from './components/chat/ChatWidget.vue'
 import { useWeather } from './composables/useWeather'
 
 const currentTab = ref('home')
+const exploreCategory = ref('관광지')
+const exploreTag = ref('')
 
 const { fetchLiveWeather } = useWeather()
 
 onMounted(() => {
   fetchLiveWeather()
 })
+
+const openExplore = (category) => {
+  exploreCategory.value = category
+  exploreTag.value = ''
+  currentTab.value = 'explore'
+}
+
+const openExploreTag = (tag) => {
+  exploreCategory.value = '관광지'
+  exploreTag.value = tag
+  currentTab.value = 'explore'
+}
 </script>
 
 <template>
@@ -28,10 +42,11 @@ onMounted(() => {
         v-if="currentTab === 'home'"
         @go-community="currentTab = 'community'"
         @open-calendar="currentTab = 'festivals'"
-        @open-location="currentTab = 'explore'"
+        @open-explore="openExplore"
+        @open-explore-tag="openExploreTag"
       />
       <CommunityView v-else-if="currentTab === 'community'" />
-      <ExploreView v-else-if="currentTab === 'explore'" />
+      <ExploreView v-else-if="currentTab === 'explore'" :initial-category="exploreCategory" :initial-tag="exploreTag" />
       <FestivalsView v-else />
     </main>
 

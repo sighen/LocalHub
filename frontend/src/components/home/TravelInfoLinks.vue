@@ -1,11 +1,16 @@
 <script setup>
 import { travelInfoLinks } from '../../data/mockData'
-import { useToast } from '../../composables/useToast'
+import { useWeather } from '../../composables/useWeather'
 
-const { showToast } = useToast()
+const emit = defineEmits(['go-community', 'open-calendar', 'open-explore'])
+
+const { toggleWeatherDetail } = useWeather()
 
 const handleInfoClick = (info) => {
-  showToast(`"${info.title}" 가이드북 다운로드가 준비되었습니다. 공식 사이트 연동 규정을 확인해 주십시오.`)
+  if (info.type === 'explore') emit('open-explore', info.category)
+  else if (info.type === 'festivals') emit('open-calendar')
+  else if (info.type === 'community') emit('go-community')
+  else if (info.type === 'weather') toggleWeatherDetail()
 }
 </script>
 
@@ -16,7 +21,7 @@ const handleInfoClick = (info) => {
       <h2 class="text-3xl font-black text-slate-900 tracking-tight">서울 여행정보</h2>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
       <div
         v-for="info in travelInfoLinks"
         :key="info.id"
