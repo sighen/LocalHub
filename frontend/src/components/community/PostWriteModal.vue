@@ -19,7 +19,7 @@ const handleImageUpload = (event) => {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" @click.self="emit('close')">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in">
       <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
         <h3 class="text-base font-black text-slate-900">{{ form.id ? '익명 소식 수정하기' : '새로운 소식 등록하기' }}</h3>
