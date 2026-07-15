@@ -35,7 +35,7 @@ const {
   fetchNearby
 } = useLocations()
 
-const { consumePlaceIntent } = useAppNavigation()
+const { consumePlaceIntent, pushBack, popBack } = useAppNavigation()
 
 const CATEGORIES = ['관광지', '문화시설', '레포츠']
 
@@ -44,8 +44,11 @@ const detailPlace = ref(null)
 const detailNearby = ref({ restaurants: [], lodgings: [] })
 const isDetailLoading = ref(false)
 const detailLoadError = ref(false)
+let detailBackId = null
 
 const openDetail = async (contentId) => {
+  const openingFromList = selectedContentId.value === null
+  if (openingFromList) detailBackId = pushBack(() => backToList())
   selectedContentId.value = contentId
   isDetailLoading.value = true
   detailLoadError.value = false
@@ -69,6 +72,10 @@ const retryDetail = () => {
 const backToList = () => {
   selectedContentId.value = null
   detailPlace.value = null
+  if (detailBackId !== null) {
+    popBack(detailBackId)
+    detailBackId = null
+  }
 }
 
 const onSelectTag = (value) => {

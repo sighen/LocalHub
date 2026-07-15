@@ -28,7 +28,7 @@ const {
 } = usePosts()
 
 const { showToast } = useToast()
-const { consumeCommunityIntent, goToPlace } = useAppNavigation()
+const { consumeCommunityIntent, goToPlace, pushBack, popBack } = useAppNavigation()
 
 const isReadModalOpen = ref(false)
 const isWriteModalOpen = ref(false)
@@ -37,6 +37,30 @@ const pwError = ref(false)
 const pwVerifyInput = ref('')
 const writeError = ref('')
 const placeFilterTitle = ref('')
+
+let readModalBackId = null
+let writeModalBackId = null
+
+const closeReadModal = () => {
+  isReadModalOpen.value = false
+  if (readModalBackId !== null) {
+    popBack(readModalBackId)
+    readModalBackId = null
+  }
+}
+
+const showWriteModal = () => {
+  isWriteModalOpen.value = true
+  writeModalBackId = pushBack(() => closeWriteModal())
+}
+
+const closeWriteModal = () => {
+  isWriteModalOpen.value = false
+  if (writeModalBackId !== null) {
+    popBack(writeModalBackId)
+    writeModalBackId = null
+  }
+}
 
 const currentActivePost = ref({})
 const blankPostForm = () => ({
@@ -58,7 +82,7 @@ let activeAction = ''
 const openCreatePostModal = () => {
   postForm.value = blankPostForm()
   writeError.value = ''
-  isWriteModalOpen.value = true
+  showWriteModal()
 }
 
 const clearPlaceFilter = () => {
@@ -74,6 +98,7 @@ const openReadPostModal = async (post) => {
   }
   currentActivePost.value = detail
   isReadModalOpen.value = true
+  readModalBackId = pushBack(() => closeReadModal())
 }
 
 const savePostForm = async () => {
@@ -84,7 +109,7 @@ const savePostForm = async () => {
     } else {
       await createPost(postForm.value)
     }
-    isWriteModalOpen.value = false
+    closeWriteModal()
   } catch (e) {
     if (e?.response?.status === 403) {
       writeError.value = '비밀번호가 일치하지 않습니다.'
@@ -133,21 +158,21 @@ const submitPasswordVerification = async () => {
     postForm.value = form
     writeError.value = ''
     isPwModalOpen.value = false
-    isReadModalOpen.value = false
-    isWriteModalOpen.value = true
+    closeReadModal()
+    showWriteModal()
     return
   }
 
   try {
     await deletePost(currentActivePost.value.id, pwVerifyInput.value)
     isPwModalOpen.value = false
-    isReadModalOpen.value = false
+    closeReadModal()
   } catch (e) {
     if (e?.response?.status === 403) {
       pwError.value = true
     } else {
       isPwModalOpen.value = false
-      isReadModalOpen.value = false
+      closeReadModal()
       showToast('삭제에 실패했어요. 잠시 후 다시 시도해주세요.')
     }
   }
@@ -164,7 +189,7 @@ onMounted(() => {
       placeContentTypeId: intent.placeContentTypeId
     }
     writeError.value = ''
-    isWriteModalOpen.value = true
+    showWriteModal()
   } else if (intent?.type === 'view-reviews') {
     placeFilterTitle.value = intent.placeTitle
     setPlaceFilter(intent.placeContentId)
@@ -197,7 +222,7 @@ onMounted(() => {
     <PostReadModal
       v-if="isReadModalOpen"
       :post="currentActivePost"
-      @close="isReadModalOpen = false"
+      @close="closeReadModal"
       @like="likePost"
       @toggle-bookmark="toggleBookmark"
       @edit="triggerAction('edit')"
@@ -208,7 +233,7 @@ onMounted(() => {
       v-if="isWriteModalOpen"
       v-model="postForm"
       :error="writeError"
-      @close="isWriteModalOpen = false"
+      @close="closeWriteModal"
       @submit="savePostForm"
     />
 
