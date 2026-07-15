@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import NavBar from './components/layout/NavBar.vue'
 import FooterBar from './components/layout/FooterBar.vue'
+import CursorSpotlight from './components/layout/CursorSpotlight.vue'
 import HomeView from './components/home/HomeView.vue'
 import CommunityView from './components/community/CommunityView.vue'
 import ExploreView from './components/explore/ExploreView.vue'
@@ -50,6 +51,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex flex-col relative">
+    <CursorSpotlight />
     <NavBar :current-tab="currentTab" @update:current-tab="changeTab" />
 
     <main class="flex-grow">

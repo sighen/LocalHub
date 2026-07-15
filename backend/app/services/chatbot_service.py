@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from functools import lru_cache
-from typing import Any
 
 from fastapi import HTTPException
 from openai import OpenAI, OpenAIError
@@ -60,48 +59,28 @@ SEARCH_CONDITION_SCHEMA = {
 }
 
 
-FINAL_ANSWER_SCHEMA = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "chat_final_answer",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {
-                "answer": {"type": "string"},
-                "recommendations": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": False,
-                        "properties": {
-                            "content_id": {"type": "string"},
-                            "reason": {"type": "string"},
-                        },
-                        "required": ["content_id", "reason"],
-                    },
-                },
-            },
-            "required": ["answer", "recommendations"],
-        },
-    },
-}
-
-
-def run_chat(message: str, db: Session) -> schemas.ChatResponse:
+def resolve_chat_places(
+    message: str,
+    history: list[schemas.ChatHistoryTurn],
+    db: Session,
+) -> list[models.Place]:
     dictionary = load_search_dictionary()
-    condition = extract_search_condition(message, dictionary)
+    condition = extract_search_condition(message, dictionary, history)
     validated_condition = validate_search_condition(condition, dictionary)
-    db_places = search_places(db, validated_condition)
+    return search_places(db, validated_condition)
 
-    final_answer = build_final_answer(message, db_places)
-    return combine_answer_with_db_places(final_answer, db_places)
+
+def _history_messages(history: list[schemas.ChatHistoryTurn]) -> list[dict]:
+    # 이전 대화 문맥("거기", "그중에서 저렴한 곳은" 같은 후속 질문)을 이해할 수
+    # 있도록 지난 대화를 그대로 이전 turn으로 끼워 넣는다. 최근 6턴(3번 왕복)만
+    # 사용해 토큰/지연 시간이 계속 늘어나지 않게 한다.
+    return [{"role": turn.role, "content": turn.content} for turn in history[-6:]]
 
 
 def extract_search_condition(
     message: str,
     dictionary: SearchDictionary,
+    history: list[schemas.ChatHistoryTurn] | None = None,
 ) -> schemas.ChatSearchCondition:
     client = _get_openai_client_or_503()
     model = _get_model()
@@ -111,15 +90,21 @@ def extract_search_condition(
         response = client.chat.completions.create(
             model=model,
             response_format=SEARCH_CONDITION_SCHEMA,
+            # gpt-5-mini는 기본적으로 답하기 전에 안 보이는 "추론" 토큰을 쓰는
+            # 추론 모델이라, 이 옵션 없이는 단순 JSON 추출에도 몇 초씩 걸린다.
+            # reasoning_effort를 최소로 낮춰서 그 추론 단계를 사실상 꺼버린다.
+            extra_body={"reasoning_effort": "minimal"},
             messages=[
                 {
                     "role": "system",
                     "content": (
                         "너는 LocalHub 관광 검색 조건 추출기다. "
                         "반드시 제공된 검색 사전 값만 사용하고 JSON만 반환한다. "
-                        "SQL을 만들지 말고 새로운 지역명, 키워드, content_type_id를 만들지 마라."
+                        "SQL을 만들지 말고 새로운 지역명, 키워드, content_type_id를 만들지 마라. "
+                        "이전 대화가 있다면 참고해서 '거기', '그중에서' 같은 후속 질문의 의미를 파악한다."
                     ),
                 },
+                *_history_messages(history or []),
                 {
                     "role": "user",
                     "content": json.dumps(
@@ -152,88 +137,72 @@ def extract_search_condition(
         raise HTTPException(status_code=502, detail="검색 조건 응답 형식이 올바르지 않습니다.")
 
 
-def build_final_answer(
+def _sse(data: dict) -> str:
+    return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+def stream_chat_answer(
     message: str,
     db_places: list[models.Place],
-) -> schemas.AIFinalAnswer:
-    if not db_places:
-        return schemas.AIFinalAnswer(
-            answer="조건에 맞는 장소를 찾지 못했습니다. 지역이나 목적을 조금 다르게 알려주시면 다시 찾아드릴게요.",
-            recommendations=[],
-        )
+    history: list[schemas.ChatHistoryTurn] | None = None,
+):
+    """OpenAI 답변을 토큰 단위로 SSE 청크로 흘려보낸다.
 
-    client = _get_openai_client_or_503()
-    model = _get_model()
-    place_payload = places_for_openai(db_places)
+    답변을 구조화된(JSON schema) 형식으로 한 번에 받으면 스트리밍 도중에는
+    깨진 JSON 조각만 보이게 되므로, 이 호출만은 response_format 없이 평문으로
+    받는다. 장소별 추천 이유는 DB 조회 결과만으로 결정하고(_default_reason),
+    답변 스트림이 끝난 뒤 한 번에 함께 보낸다.
+    """
+    if not db_places:
+        answer = "조건에 맞는 장소를 찾지 못했습니다. 지역이나 목적을 조금 다르게 알려주시면 다시 찾아드릴게요."
+        yield _sse({"type": "chunk", "text": answer})
+        yield _sse({"type": "done", "places": []})
+        return
+
+    places = [place_to_chat_place(place, _default_reason(place)) for place in db_places]
 
     try:
-        response = client.chat.completions.create(
+        client = _get_openai_client_or_503()
+        model = _get_model()
+        place_payload = places_for_openai(db_places)
+
+        stream = client.chat.completions.create(
             model=model,
-            response_format=FINAL_ANSWER_SCHEMA,
+            # 여기도 마찬가지로 추론 단계를 꺼서, 스트리밍이 시작되기 전에
+            # 안 보이는 "생각 중" 지연이 생기지 않게 한다.
+            extra_body={"reasoning_effort": "minimal"},
             messages=[
                 {
                     "role": "system",
                     "content": (
                         "너는 LocalHub 장소 추천 답변 작성기다. "
-                        "반드시 전달받은 DB 장소만 사용한다. content_id를 수정하거나 새로 만들지 않는다. "
-                        "답변과 각 장소 추천 이유만 자연스러운 한국어로 작성한다."
+                        "전달받은 DB 장소를 근거로 사용자 질문에 자연스러운 한국어로 답한다. "
+                        "장소 이름을 새로 만들지 말고 전달받은 장소만 언급한다. "
+                        "마크다운 없이 일반 문장으로 답한다. "
+                        "이전 대화가 있다면 자연스럽게 이어서 답한다."
                     ),
                 },
+                *_history_messages(history or []),
                 {
                     "role": "user",
                     "content": json.dumps(
-                        {
-                            "message": message,
-                            "places": place_payload,
-                        },
+                        {"message": message, "places": place_payload},
                         ensure_ascii=False,
                     ),
                 },
             ],
+            stream=True,
             timeout=20,
         )
-        content = response.choices[0].message.content or "{}"
-        return schemas.AIFinalAnswer.model_validate_json(content)
-    except (OpenAIError, IndexError, ValidationError, ValueError):
-        logger.exception("OpenAI final answer failed; using DB fallback answer")
-        return _fallback_final_answer(message, db_places)
+        for event in stream:
+            delta = event.choices[0].delta.content if event.choices else None
+            if delta:
+                yield _sse({"type": "chunk", "text": delta})
+    except OpenAIError:
+        logger.exception("OpenAI streaming final answer failed; using DB fallback answer")
+        yield _sse({"type": "chunk", "text": "요청하신 조건에 맞는 장소를 찾아봤습니다."})
 
-
-def combine_answer_with_db_places(
-    ai_answer: schemas.AIFinalAnswer,
-    db_places: list[models.Place],
-) -> schemas.ChatResponse:
-    places_by_id = {place.content_id: place for place in db_places}
-    reasons_by_id: dict[str, str] = {}
-    for recommendation in ai_answer.recommendations:
-        if recommendation.content_id in places_by_id and recommendation.content_id not in reasons_by_id:
-            reasons_by_id[recommendation.content_id] = recommendation.reason
-
-    selected_places = []
-    if reasons_by_id:
-        for place in db_places:
-            if place.content_id in reasons_by_id:
-                selected_places.append(place_to_chat_place(place, reasons_by_id[place.content_id]))
-    else:
-        for place in db_places:
-            selected_places.append(place_to_chat_place(place, _default_reason(place)))
-
-    return schemas.ChatResponse(answer=ai_answer.answer, places=selected_places)
-
-
-def _fallback_final_answer(message: str, db_places: list[models.Place]) -> schemas.AIFinalAnswer:
-    if not db_places:
-        return schemas.AIFinalAnswer(
-            answer="조건에 맞는 장소를 찾지 못했습니다. 다른 지역이나 목적을 알려주시면 다시 찾아드릴게요.",
-            recommendations=[],
-        )
-    return schemas.AIFinalAnswer(
-        answer="요청하신 조건에 맞는 장소를 찾아봤습니다.",
-        recommendations=[
-            schemas.AIRecommendation(content_id=place.content_id, reason=_default_reason(place))
-            for place in db_places
-        ],
-    )
+    yield _sse({"type": "done", "places": [place.model_dump() for place in places]})
 
 
 def _default_reason(place: models.Place) -> str:
