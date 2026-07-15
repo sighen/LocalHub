@@ -7,7 +7,6 @@ import { useAppNavigation } from '../../composables/useAppNavigation'
 import { tagLabel } from '../../utils/tagLabels'
 import { secureImageUrl } from '../../utils/imageUrl'
 import { resolvePlaceImage } from '../../utils/placeImage'
-import defaultPlace from '../../assets/default-place.svg'
 
 const props = defineProps({
   place: { type: Object, default: null }
@@ -48,7 +47,7 @@ const isFestival = (place) => place.content_type_id === 15
 
         <div class="p-6 space-y-5 overflow-y-auto">
           <div v-if="resolvePlaceImage(place)" class="h-48 rounded-xl overflow-hidden border border-slate-200">
-            <img :src="secureImageUrl(resolvePlaceImage(place)) || defaultPlace" :alt="place.title" class="w-full h-full object-cover" @error="(e) => { e.target.src = defaultPlace }" />
+            <img :src="secureImageUrl(resolvePlaceImage(place))" :alt="place.title" class="w-full h-full object-cover" />
           </div>
 
           <div class="space-y-1.5">

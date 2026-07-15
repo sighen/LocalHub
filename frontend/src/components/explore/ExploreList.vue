@@ -1,7 +1,6 @@
 <script setup>
 import { tagLabel } from '../../utils/tagLabels'
 import { secureImageUrl } from '../../utils/imageUrl'
-import defaultPlace from '../../assets/default-place.svg'
 import { resolvePlaceImage, resolvePlaceImageCandidates } from '../../utils/placeImage'
 
 const props = defineProps({
@@ -26,8 +25,6 @@ function onImageError(event, place) {
   if (nextIndex < candidates.length) {
     event.target.dataset.fallbackIndex = nextIndex
     event.target.src = candidates[nextIndex]
-  } else {
-    event.target.src = defaultPlace
   }
 }
 </script>
@@ -62,7 +59,7 @@ function onImageError(event, place) {
           <div class="h-40 bg-slate-100 overflow-hidden relative">
             <template v-if="resolvePlaceImage(place)">
               <img
-                :src="secureImageUrl(resolvePlaceImage(place)) || defaultPlace"
+                :src="secureImageUrl(resolvePlaceImage(place))"
                 :alt="place.title"
                 class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
                 @error="(e) => onImageError(e, place)"

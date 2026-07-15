@@ -1,6 +1,7 @@
 <script setup>
 import { formatEventPeriod } from '../../composables/useFestivals'
 import { secureImageUrl } from '../../utils/imageUrl'
+import { resolvePlaceImage } from '../../utils/placeImage'
 
 defineProps({
   festivals: { type: Array, required: true },
@@ -38,16 +39,17 @@ const emit = defineEmits(['open-detail', 'retry'])
       >
         <div class="flip-card-inner">
           <div class="flip-card-front rounded-2xl border border-slate-100 shadow-sm overflow-hidden bg-slate-100">
-            <img
-              v-if="f.image_url || f.thumbnail_url"
-              :src="secureImageUrl(f.image_url || f.thumbnail_url)"
-              :alt="f.title"
-              loading="lazy"
-              class="w-full h-full object-cover"
-            />
-            <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
-              <i class="fa-regular fa-image text-4xl"></i>
-            </div>
+            <template v-if="resolvePlaceImage(f)">
+              <img
+                :src="secureImageUrl(resolvePlaceImage(f))"
+                :alt="f.title"
+                loading="lazy"
+                class="w-full h-full object-cover"
+              />
+            </template>
+            <template v-else>
+              <div class="w-full h-full bg-slate-200"></div>
+            </template>
             <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 space-y-1">
               <span v-if="f.district_name" class="text-[10px] font-bold text-white bg-white/20 px-2 py-0.5 rounded backdrop-blur-sm">{{ f.district_name }}</span>
               <h3 class="text-sm font-black text-white truncate">{{ f.title }}</h3>

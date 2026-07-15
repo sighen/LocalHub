@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUpdate, onBeforeUnmo
 import { useEvents } from '../../composables/useEvents'
 import { useFestivals, formatEventPeriod } from '../../composables/useFestivals'
 import { secureImageUrl } from '../../utils/imageUrl'
+import { resolvePlaceImage } from '../../utils/placeImage'
 import FestivalDetailModal from '../festivals/FestivalDetailModal.vue'
 
 const emit = defineEmits(['open-calendar'])
@@ -233,15 +234,16 @@ onBeforeUnmount(() => {
           <div class="flip-card aspect-[3/4] cursor-pointer" @click="openEventDetails(ev)">
             <div class="flip-card-inner">
               <div class="flip-card-front rounded-2xl border border-slate-100 shadow-sm overflow-hidden bg-slate-100">
-                <img
-                  v-if="ev.image_url || ev.thumbnail_url"
-                  :src="secureImageUrl(ev.image_url || ev.thumbnail_url)"
-                  :alt="ev.title"
-                  class="w-full h-full object-cover"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
-                  <i class="fa-regular fa-image text-3xl"></i>
-                </div>
+                <template v-if="resolvePlaceImage(ev)">
+                  <img
+                    :src="secureImageUrl(resolvePlaceImage(ev))"
+                    :alt="ev.title"
+                    class="w-full h-full object-cover"
+                  />
+                </template>
+                <template v-else>
+                  <div class="w-full h-full bg-slate-200"></div>
+                </template>
                 <span class="absolute top-3 left-3 px-2.5 py-1 bg-blue-600 text-white text-[10px] font-black rounded-lg shadow-sm">진행/예정</span>
                 <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 space-y-1">
                   <span v-if="ev.district_name" class="text-[10px] font-bold text-white bg-white/20 px-2 py-0.5 rounded backdrop-blur-sm">{{ ev.district_name }}</span>

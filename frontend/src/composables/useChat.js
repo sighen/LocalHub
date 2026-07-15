@@ -33,17 +33,13 @@ export function useChat() {
     text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')
 
   const queryChatApi = async (userPrompt) => {
-    const systemPrompt = `당사는 'LocalHub 서울'이라는 공식 관광 정보 커뮤니티 플랫폼을 지휘하는 프리미엄 AI 가이드 요원입니다.
-이용자의 궁금증에 대해 검색 도구를 접목하여 2026년 7월 일정 및 유효 역사적 데이터를 바탕으로 명확히 안내해 주세요.
-반드시 한국어로 친절하고 전문적으로 답해 주세요.`
-
     let delay = 1000
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const res = await fetch(CHAT_API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: userPrompt, system: systemPrompt })
+          body: JSON.stringify({ message: userPrompt })
         })
 
         if (!res.ok) {
@@ -56,8 +52,7 @@ export function useChat() {
         }
 
         const data = await res.json()
-        const answer = data.reply ?? data.candidates?.[0]?.content?.parts?.[0]?.text
-        if (answer) return answer
+        if (data.reply) return data.reply
         throw new Error('Null answer content')
       } catch (e) {
         if (attempt === 2) throw e
