@@ -1,15 +1,18 @@
 <script setup>
 import { ref, watch } from 'vue'
 import ExploreMap from './ExploreMap.vue'
+import NearbyPlaceModal from './NearbyPlaceModal.vue'
 import client from '../../api/client'
 import { useWeather } from '../../composables/useWeather'
 import { useAppNavigation } from '../../composables/useAppNavigation'
 import { tagLabel } from '../../utils/tagLabels'
 import { secureImageUrl } from '../../utils/imageUrl'
+import { resolvePlaceImage } from '../../utils/placeImage'
+import defaultPlace from '../../assets/default-place.svg'
 
 const props = defineProps({
   place: { type: Object, default: null },
-  nearby: { type: Object, default: () => ({ restaurants: [], lodgings: [] }) },
+  nearby: { type: Object, default: () => ({ festival: null, attraction: null }) },
   isLoading: { type: Boolean, default: false },
   loadError: { type: Boolean, default: false }
 })
@@ -18,6 +21,8 @@ const emit = defineEmits(['back', 'retry'])
 
 const { weatherData } = useWeather()
 const { requestWriteReview, requestViewReviews } = useAppNavigation()
+
+const nearbyModalPlace = ref(null)
 
 const reviewCount = ref(0)
 
@@ -54,7 +59,7 @@ watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediat
     <template v-else>
       <div class="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
         <div v-if="place.image_url" class="h-64 bg-slate-100 overflow-hidden">
-          <img :src="secureImageUrl(place.image_url)" :alt="place.title" class="w-full h-full object-cover" />
+          <img :src="secureImageUrl(place.image_url) || defaultPlace" :alt="place.title" class="w-full h-full object-cover" @error="(e) => { e.target.src = defaultPlace }" />
         </div>
 
         <div class="p-6 space-y-4">
@@ -100,31 +105,47 @@ watch(() => props.place, (place) => { if (place) loadReviewCount() }, { immediat
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="bg-white border border-slate-100 rounded-3xl shadow-sm p-5 space-y-3">
-          <h3 class="text-sm font-black text-slate-800"><i class="fa-solid fa-utensils text-orange-500 mr-1.5"></i>근처 맛집 추천</h3>
-          <div v-if="nearby.restaurants.length === 0" class="text-[11px] text-slate-300 py-6 text-center">
-            준비 중입니다. 맛집 데이터 연동 후 제공될 예정이에요.
+          <h3 class="text-sm font-black text-slate-800"><i class="fa-solid fa-champagne-glasses text-orange-500 mr-1.5"></i>근처 축제행사</h3>
+          <div v-if="!nearby.festival" class="text-[11px] text-slate-300 py-6 text-center">
+            근처에 진행 중인 축제행사가 없습니다.
           </div>
-          <div v-else class="space-y-2">
-            <div v-for="r in nearby.restaurants" :key="r.content_id" class="bg-slate-50 rounded-xl px-3.5 py-2.5">
-              <p class="text-xs font-bold text-slate-700">{{ r.title }}</p>
-              <p class="text-[11px] text-slate-400 truncate">{{ r.addr1 }}</p>
-            </div>
+          <div
+            v-else
+            @click="nearbyModalPlace = nearby.festival"
+            class="flex items-center gap-3 bg-slate-50 rounded-xl px-3.5 py-2.5 cursor-pointer hover:bg-slate-100 transition"
+          >
+            <img
+              :src="secureImageUrl(resolvePlaceImage(nearby.festival)) || defaultPlace"
+              :alt="nearby.festival.title"
+              class="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+              @error="(e) => { e.target.src = defaultPlace }"
+            />
+            <p class="text-xs font-bold text-slate-700 truncate">{{ nearby.festival.title }}</p>
           </div>
         </div>
 
         <div class="bg-white border border-slate-100 rounded-3xl shadow-sm p-5 space-y-3">
-          <h3 class="text-sm font-black text-slate-800"><i class="fa-solid fa-bed text-indigo-500 mr-1.5"></i>근처 숙박 추천</h3>
-          <div v-if="nearby.lodgings.length === 0" class="text-[11px] text-slate-300 py-6 text-center">
-            준비 중입니다. 숙박 데이터 연동 후 제공될 예정이에요.
+          <h3 class="text-sm font-black text-slate-800"><i class="fa-solid fa-map-location-dot text-indigo-500 mr-1.5"></i>근처 관광지 추천</h3>
+          <div v-if="!nearby.attraction" class="text-[11px] text-slate-300 py-6 text-center">
+            근처에 추천할 관광지가 없습니다.
           </div>
-          <div v-else class="space-y-2">
-            <div v-for="l in nearby.lodgings" :key="l.content_id" class="bg-slate-50 rounded-xl px-3.5 py-2.5">
-              <p class="text-xs font-bold text-slate-700">{{ l.title }}</p>
-              <p class="text-[11px] text-slate-400 truncate">{{ l.addr1 }}</p>
-            </div>
+          <div
+            v-else
+            @click="nearbyModalPlace = nearby.attraction"
+            class="flex items-center gap-3 bg-slate-50 rounded-xl px-3.5 py-2.5 cursor-pointer hover:bg-slate-100 transition"
+          >
+            <img
+              :src="secureImageUrl(resolvePlaceImage(nearby.attraction)) || defaultPlace"
+              :alt="nearby.attraction.title"
+              class="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+              @error="(e) => { e.target.src = defaultPlace }"
+            />
+            <p class="text-xs font-bold text-slate-700 truncate">{{ nearby.attraction.title }}</p>
           </div>
         </div>
       </div>
     </template>
+
+    <NearbyPlaceModal :place="nearbyModalPlace" @close="nearbyModalPlace = null" />
   </div>
 </template>

@@ -58,7 +58,7 @@ const detailId = computed(() => (segments.value[0] === 'explore' ? segments.valu
 
 const selectedContentId = ref(null)
 const detailPlace = ref(null)
-const detailNearby = ref({ restaurants: [], lodgings: [] })
+const detailNearby = ref({ festival: null, attraction: null })
 const isDetailLoading = ref(false)
 const detailLoadError = ref(false)
 

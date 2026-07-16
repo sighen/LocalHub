@@ -1,3 +1,5 @@
+from datetime import date
+from math import atan2, cos, radians, sin, sqrt
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,13 +18,18 @@ CATEGORY_CONTENT_TYPE = {
     "레포츠": 28,
 }
 
-NEARBY_CONTENT_TYPE = {
-    "restaurants": 39,
-    "lodgings": 32,
-}
+EXPLORE_CONTENT_TYPES = tuple(CATEGORY_CONTENT_TYPE.values())
+FESTIVAL_CONTENT_TYPE = 15
 
-NEARBY_LIMIT = 4
 MAX_POINTS = 2000
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    earth_radius_km = 6371
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return 2 * earth_radius_km * atan2(sqrt(a), sqrt(1 - a))
 
 
 def _filtered_query(
@@ -132,22 +139,32 @@ def get_nearby_places(content_id: str, db: Session = Depends(get_db)):
     if not place:
         raise HTTPException(status_code=404, detail="장소를 찾을 수 없습니다.")
 
-    def nearby_of(content_type_id: int):
-        if not place.district_name:
-            return []
-        return (
-            db.query(models.Place)
-            .filter(
-                models.Place.content_type_id == content_type_id,
-                models.Place.district_name == place.district_name,
-                models.Place.content_id != content_id,
+    def nearest_of(content_type_ids, ongoing_only=False):
+        if place.latitude is None or place.longitude is None:
+            return None
+        query = db.query(models.Place).filter(
+            models.Place.content_type_id.in_(content_type_ids),
+            models.Place.content_id != content_id,
+            models.Place.latitude.isnot(None),
+            models.Place.longitude.isnot(None),
+        )
+        if ongoing_only:
+            today = date.today().strftime("%Y%m%d")
+            query = query.filter(
+                models.Place.event_start_date.isnot(None),
+                models.Place.event_end_date.isnot(None),
+                models.Place.event_start_date <= today,
+                models.Place.event_end_date >= today,
             )
-            .order_by(models.Place.title.asc())
-            .limit(NEARBY_LIMIT)
-            .all()
+        candidates = query.all()
+        if not candidates:
+            return None
+        return min(
+            candidates,
+            key=lambda c: _haversine_km(place.latitude, place.longitude, c.latitude, c.longitude),
         )
 
     return schemas.NearbyPlacesResponse(
-        restaurants=nearby_of(NEARBY_CONTENT_TYPE["restaurants"]),
-        lodgings=nearby_of(NEARBY_CONTENT_TYPE["lodgings"]),
+        festival=nearest_of([FESTIVAL_CONTENT_TYPE], ongoing_only=True),
+        attraction=nearest_of(EXPLORE_CONTENT_TYPES),
     )
